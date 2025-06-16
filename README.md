@@ -1,4 +1,3 @@
-<?php
 # Laravel EFIHUB Client
 
 Package Laravel untuk integrasi dengan EFIHUB API menggunakan OAuth2 Client Credentials Flow dengan automatic token management dan caching.
@@ -77,11 +76,11 @@ class UserService
     public function getAllUsers()
     {
         $response = $this->efihub->get('/users');
-        
+
         if ($response->successful()) {
             return $response->json();
         }
-        
+
         throw new Exception('Failed to fetch users');
     }
 }
@@ -130,18 +129,18 @@ Package ini secara otomatis menangani:
 
 ### HTTP Methods
 
-| Method | Description |
-|--------|-------------|
-| `get($endpoint, $options = [])` | HTTP GET request |
-| `post($endpoint, $options = [])` | HTTP POST request |
-| `put($endpoint, $options = [])` | HTTP PUT request |
-| `delete($endpoint, $options = [])` | HTTP DELETE request |
+| Method                                       | Description          |
+| -------------------------------------------- | -------------------- |
+| `get($endpoint, $options = [])`              | HTTP GET request     |
+| `post($endpoint, $options = [])`             | HTTP POST request    |
+| `put($endpoint, $options = [])`              | HTTP PUT request     |
+| `delete($endpoint, $options = [])`           | HTTP DELETE request  |
 | `request($method, $endpoint, $options = [])` | Generic HTTP request |
 
 ### Token Management
 
-| Method | Description |
-|--------|-------------|
+| Method             | Description                       |
+| ------------------ | --------------------------------- |
 | `getAccessToken()` | Mendapatkan access token (cached) |
 
 ## Requirements
@@ -166,29 +165,29 @@ class EfihubService
     {
         try {
             $response = Efihub::post('/users', $userData);
-            
+
             if ($response->successful()) {
                 return $response->json();
             }
-            
+
             throw new \Exception('Failed to create user: ' . $response->body());
-            
+
         } catch (\Exception $e) {
             Log::error('EFIHUB Create User Error', [
                 'error' => $e->getMessage(),
                 'data' => $userData
             ]);
-            
+
             throw $e;
         }
     }
-    
+
     public function getUsers(array $filters = []): array
     {
         $response = Efihub::get('/users', $filters);
-        
-        return $response->successful() 
-            ? $response->json() 
+
+        return $response->successful()
+            ? $response->json()
             : [];
     }
 }
