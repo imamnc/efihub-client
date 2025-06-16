@@ -1,5 +1,5 @@
 {
-  "name": "efihub/client",
+  "name": "imamnc/efihub-client",
   "description": "Laravel client for EFIHUB Integration Service",
   "type": "library",
   "license": "MIT",
@@ -18,10 +18,10 @@
     "client",
     "oauth2"
   ],
-  "homepage": "https://github.com/efihub/client",
+  "homepage": "https://github.com/imamnc/efihub/client",
   "support": {
-    "issues": "https://github.com/efihub/client/issues",
-    "source": "https://github.com/efihub/client"
+    "issues": "https://github.com/imamnc/efihub/client/issues",
+    "source": "https://github.com/imamnc/efihub/client"
   },
   "autoload": {
     "psr-4": {
