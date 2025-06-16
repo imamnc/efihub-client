@@ -3,6 +3,26 @@
   "description": "Laravel client for EFIHUB Integration Service",
   "type": "library",
   "license": "MIT",
+  "authors": [
+    {
+      "name": "Imam Nc",
+      "email": "contact.imamnc@gmail.com",
+      "homepage": "https://github.com/imamnc",
+      "role": "Maintainer"
+    }
+  ],
+  "keywords": [
+    "laravel",
+    "efihub",
+    "api",
+    "client",
+    "oauth2"
+  ],
+  "homepage": "https://github.com/efihub/client",
+  "support": {
+    "issues": "https://github.com/efihub/client/issues",
+    "source": "https://github.com/efihub/client"
+  },
   "autoload": {
     "psr-4": {
       "Efihub\\": "src/"
