@@ -13,7 +13,6 @@ class EfihubClient
             $response = Http::asForm()->post(config('efihub.token_url'), [
                 'client_id' => config('efihub.client_id'),
                 'client_secret' => config('efihub.client_secret'),
-                'grant_type' => 'client_credentials',
             ]);
 
             throw_if($response->failed(), new \Exception('Failed to fetch EFIHUB token'));
