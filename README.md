@@ -2,19 +2,15 @@
     <a href="https://efihub.morefurniture.id">
         <img src="https://efihub.morefurniture.id/img/logo.png" alt="EFIHUB" width="180" />
     </a>
-
     <h1 align="center">EFIHUB PHP/Laravel Client</h1>
-
     <p align="center">
         <em>A modern SDK to integrate with the EFIHUB platform using the OAuth 2.0 Client Credentials flow.</em>
     </p>
-
     <p align="center">
         <a href="https://packagist.org/packages/imamnc/efihub-client"><img src="https://img.shields.io/packagist/v/imamnc/efihub-client.svg?logo=packagist" alt="packagist version" /></a>
         <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" />
         <a href="https://imamnc.com"><img src="https://img.shields.io/badge/author-Imam%20Nc-orange.svg" alt="author" /></a>
     </p>
-
 </p>
 
 ## Description
