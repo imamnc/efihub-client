@@ -15,36 +15,36 @@
 
 ## Description
 
-SDK modern untuk integrasi ke platform EFIHUB menggunakan OAuth 2.0 Client Credentials flow. Menghadirkan helper HTTP sederhana (GET/POST/PUT/DELETE), manajemen token otomatis, dan integrasi native dengan ekosistem Laravel.
+A modern SDK for integrating with the EFIHUB platform using the OAuth 2.0 Client Credentials flow. It provides simple HTTP helpers (GET/POST/PUT/DELETE), automatic token management, and native integration with the Laravel ecosystem.
 
-[EFIHUB](https://efihub.morefurniture.id/) adalah platform integrasi terpusat milik PT EFI yang menghubungkan berbagai aplikasi EFI dalam satu ekosistem. Menyediakan:
+[EFIHUB](https://efihub.morefurniture.id/) is PT EFI’s centralized integration platform that connects multiple EFI applications into a single ecosystem. It offers:
 
-- API Sharing Platform: API yang discoverable dan aman antar aplikasi internal
-- Central Webhook Hub: notifikasi real-time dengan routing, retry, dan logging
-- Central Scheduler: otomasi task, cron jobs, background processes
-- Enterprise Security: OAuth 2.0, JWT, audit trail
-- Unified Dashboard: observability untuk API, webhook, scheduler, dan lainnya
+- API Sharing Platform: discoverable and secured APIs across internal apps
+- Central Webhook Hub: real-time notifications with routing, retries, and logging
+- Central Scheduler: task automation, cron jobs, and background processing
+- Enterprise Security: OAuth 2.0, JWT, and audit trails
+- Unified Dashboard: observability across APIs, webhooks, schedulers, and more
 
-Pustaka ini, `imamnc/efihub-client`, adalah klien resmi PHP/Laravel untuk REST API EFIHUB. Autentikasi menggunakan OAuth 2.0 Client Credentials dan menyediakan helper HTTP GET/POST/PUT/DELETE.
+This package, `imamnc/efihub-client`, is the official PHP/Laravel client for EFIHUB’s REST API. It authenticates using the OAuth 2.0 Client Credentials flow and exposes simple HTTP helpers for GET, POST, PUT and DELETE.
 
-Catatan penting: Karena Client Credentials membutuhkan client secret, library ini hanya untuk lingkungan server-side tepercaya (backend). Simpan kredensial di environment/server, jangan pernah mengirimkannya ke browser/klien publik.
+Important: because the Client Credentials flow requires a client secret, this library must only be used in trusted server-side environments (backend). Keep your credentials in environment variables or a secure secrets manager and never expose them to browsers or public clients.
 
-## Fitur
+## Features
 
 - ✅ OAuth 2.0 Client Credentials authentication
 - ✅ Automatic access token management & caching
-- ✅ Auto refresh saat 401 (token kadaluarsa) + retry sekali
-- ✅ HTTP client wrapper berbasis Laravel `Http` response
-- ✅ Facade dan Service Provider (auto-discovery)
-- ✅ Konfigurasi berbasis environment
+- ✅ Automatic refresh on 401 (expired token) with one retry
+- ✅ HTTP client wrapper based on Laravel `Http` responses
+- ✅ Facade and Service Provider (auto-discovery)
+- ✅ Environment-based configuration
 
-## Persyaratan
+## Requirements
 
 - PHP ^8.0
-- Laravel ^8.0|^9.0|^10.0|^11.0|^12.0
+- Laravel ^8.0 | ^9.0 | ^10.0 | ^11.0 | ^12.0
 - Guzzle HTTP ^7.0
 
-## Instalasi
+## Installation
 
 ### 1) Install via Composer
 
@@ -52,7 +52,7 @@ Catatan penting: Karena Client Credentials membutuhkan client secret, library in
 composer require imamnc/efihub-client
 ```
 
-### 2) Publish konfigurasi
+### 2) Publish configuration
 
 ```bash
 php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=config
@@ -60,7 +60,7 @@ php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=confi
 
 ### 3) Environment variables
 
-Tambahkan ke `.env` Anda:
+Add to your `.env`:
 
 ```env
 EFIHUB_CLIENT_ID=your_client_id
@@ -69,9 +69,9 @@ EFIHUB_TOKEN_URL=https://efihub.morefurniture.id/oauth/token
 EFIHUB_API_URL=https://efihub.morefurniture.id/api
 ```
 
-## Konfigurasi
+## Configuration
 
-File `config/efihub.php` (setelah publish):
+The `config/efihub.php` file (after publishing):
 
 ```php
 return [
@@ -82,16 +82,16 @@ return [
 ];
 ```
 
-Anda bisa override nilai default via `.env` jika endpoint EFIHUB yang digunakan berbeda.
+You can override the defaults via `.env` if you use a different EFIHUB endpoint.
 
 ## Quick start
 
-Contoh sederhana menggunakan Facade di controller/service:
+A minimal example using the Facade in a controller or service:
 
 ```php
 use Efihub\Facades\Efihub;
 
-// Mendapatkan daftar user (GET) dengan query params
+// Get list of users (GET) with query params
 $response = Efihub::get('/user', ['page' => 1]);
 
 if ($response->successful()) {
@@ -99,14 +99,14 @@ if ($response->successful()) {
 }
 ```
 
-## Penggunaan
+## Usage
 
 ### Laravel Facade
 
 ```php
 use Efihub\Facades\Efihub;
 
-// GET + query params
+// GET with query params
 $res = Efihub::get('/user', ['page' => 2, 'per_page' => 20]);
 
 // POST JSON body
@@ -119,7 +119,7 @@ $res = Efihub::put('/orders/123', ['qty' => 3]);
 $res = Efihub::delete('/orders/123');
 ```
 
-Catatan: Parameter kedua akan dikirim sebagai query (GET) atau body (POST/PUT) sesuai dengan perilaku Laravel HTTP client.
+Note: the second parameter will be sent as query parameters for GET requests or as the request body for POST/PUT requests following the Laravel HTTP client behavior.
 
 ### Dependency Injection (Service/Controller)
 
@@ -138,9 +138,9 @@ class UserService
 }
 ```
 
-### Response & Error handling
+### Response & error handling
 
-Semua method mengembalikan `Illuminate\Http\Client\Response`:
+All methods return `Illuminate\Http\Client\Response`:
 
 ```php
 $res = Efihub::get('/user/123');
@@ -148,7 +148,7 @@ $res = Efihub::get('/user/123');
 if ($res->successful()) {
     $data = $res->json();
 } elseif ($res->failed()) {
-    // akses detail error dari body/status
+    // access error details from body/status
     logger()->error('EFIHUB error', [
         'status' => $res->status(),
         'body' => $res->json(),
@@ -156,27 +156,27 @@ if ($res->successful()) {
 }
 ```
 
-## Perilaku Autentikasi
+## Authentication behavior
 
-- Access token diambil via Client Credentials dan di-cache selama ±55 menit
-- Jika request mendapat 401, token akan dihapus, di-refresh, lalu request di-retry 1x otomatis
+- Access tokens are obtained via Client Credentials and cached (approx. 55 minutes)
+- If a request returns 401, the token is cleared, refreshed, and the request is retried once automatically
 
 ## API
 
-Semua method berada pada `Efihub\EfihubClient` dan tersedia juga via Facade `Efihub`.
+All methods live on `Efihub\\EfihubClient` and are also available via the `Efihub` Facade.
 
 - `get(string $endpoint, array $options = []) : Response`
 - `post(string $endpoint, array $options = []) : Response`
 - `put(string $endpoint, array $options = []) : Response`
 - `delete(string $endpoint, array $options = []) : Response`
 - `request(string $method, string $endpoint, array $options = []) : Response`
-- `getAccessToken() : string` — mengembalikan access token (cached)
+- `getAccessToken() : string` — returns the cached access token
 
-Tipe kembalian: `Illuminate\Http\Client\Response`.
+Return type: `Illuminate\\Http\\Client\\Response`.
 
 ## Testing
 
-Anda dapat memalsukan (fake) request HTTP untuk testing:
+You can fake HTTP requests for testing:
 
 ```php
 use Illuminate\Support\Facades\Http;
@@ -192,24 +192,24 @@ Http::fake([
 ]);
 ```
 
-## Catatan Keamanan
+## Security notes
 
-- Jangan gunakan library ini di browser/klien publik. Hanya untuk lingkungan server-side tepercaya.
-- Simpan kredensial di environment variable atau secrets manager.
+- Do not use this library in browser/public clients. It is intended for trusted server-side environments only.
+- Store credentials in environment variables or a secure secrets manager.
 
-## Kontribusi
+## Contributing
 
-1. Fork repository
-2. Buat feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit (`git commit -m 'Add amazing feature'`)
-4. Push (`git push origin feature/amazing-feature`)
-5. Buka Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Lisensi
+## License
 
-MIT © Imam Nurcholis. Lihat file [LICENSE](LICENSE).
+MIT © Imam Nurcholis. See the [LICENSE](LICENSE) file for details.
 
-## Author & Link
+## Author & links
 
 - Author: [Imam Nurcholis](https://github.com/imamnc)
-- Website EFIHUB: https://efihub.morefurniture.id
+- EFIHUB: https://efihub.morefurniture.id
