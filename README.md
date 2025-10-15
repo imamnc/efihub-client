@@ -1,34 +1,70 @@
-# Laravel EFIHUB Client
+<p align="center">
+    <a href="https://efihub.morefurniture.id">
+        <img src="https://efihub.morefurniture.id/img/logo.png" alt="EFIHUB" width="180" />
+    </a>
 
-Package Laravel untuk integrasi dengan EFIHUB API menggunakan OAuth2 Client Credentials Flow dengan automatic token management dan caching.
+    <h1 align="center">EFIHUB PHP/Laravel Client</h1>
+
+    <p align="center">
+        <em>A modern SDK to integrate with the EFIHUB platform using the OAuth 2.0 Client Credentials flow.</em>
+    </p>
+
+    <p align="center">
+        <a href="https://packagist.org/packages/imamnc/efihub-client"><img src="https://img.shields.io/packagist/v/imamnc/efihub-client.svg?logo=packagist" alt="packagist version" /></a>
+        <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" />
+        <a href="https://imamnc.com"><img src="https://img.shields.io/badge/author-Imam%20Nc-orange.svg" alt="author" /></a>
+    </p>
+
+</p>
+
+## Description
+
+SDK modern untuk integrasi ke platform EFIHUB menggunakan OAuth 2.0 Client Credentials flow. Menghadirkan helper HTTP sederhana (GET/POST/PUT/DELETE), manajemen token otomatis, dan integrasi native dengan ekosistem Laravel.
+
+[EFIHUB](https://efihub.morefurniture.id/) adalah platform integrasi terpusat milik PT EFI yang menghubungkan berbagai aplikasi EFI dalam satu ekosistem. Menyediakan:
+
+- API Sharing Platform: API yang discoverable dan aman antar aplikasi internal
+- Central Webhook Hub: notifikasi real-time dengan routing, retry, dan logging
+- Central Scheduler: otomasi task, cron jobs, background processes
+- Enterprise Security: OAuth 2.0, JWT, audit trail
+- Unified Dashboard: observability untuk API, webhook, scheduler, dan lainnya
+
+Pustaka ini, `imamnc/efihub-client`, adalah klien resmi PHP/Laravel untuk REST API EFIHUB. Autentikasi menggunakan OAuth 2.0 Client Credentials dan menyediakan helper HTTP GET/POST/PUT/DELETE.
+
+Catatan penting: Karena Client Credentials membutuhkan client secret, library ini hanya untuk lingkungan server-side tepercaya (backend). Simpan kredensial di environment/server, jangan pernah mengirimkannya ke browser/klien publik.
 
 ## Fitur
 
-- ✅ OAuth2 Client Credentials authentication
-- ✅ Automatic access token management dan caching
-- ✅ Token refresh otomatis saat expired
-- ✅ HTTP client wrapper dengan error handling
-- ✅ Laravel Facade support
-- ✅ Service Provider auto-discovery
-- ✅ Konfigurasi environment-based
+- ✅ OAuth 2.0 Client Credentials authentication
+- ✅ Automatic access token management & caching
+- ✅ Auto refresh saat 401 (token kadaluarsa) + retry sekali
+- ✅ HTTP client wrapper berbasis Laravel `Http` response
+- ✅ Facade dan Service Provider (auto-discovery)
+- ✅ Konfigurasi berbasis environment
+
+## Persyaratan
+
+- PHP ^8.0
+- Laravel ^8.0|^9.0|^10.0|^11.0|^12.0
+- Guzzle HTTP ^7.0
 
 ## Instalasi
 
-### 1. Install via Composer
+### 1) Install via Composer
 
 ```bash
-composer require efihub/client
+composer require imamnc/efihub-client
 ```
 
-### 2. Publish Configuration
+### 2) Publish konfigurasi
 
 ```bash
 php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=config
 ```
 
-### 3. Environment Configuration
+### 3) Environment variables
 
-Tambahkan konfigurasi berikut ke file `.env`:
+Tambahkan ke `.env` Anda:
 
 ```env
 EFIHUB_CLIENT_ID=your_client_id
@@ -37,76 +73,9 @@ EFIHUB_TOKEN_URL=https://efihub.morefurniture.id/oauth/token
 EFIHUB_API_URL=https://efihub.morefurniture.id/api
 ```
 
-## Penggunaan
-
-### Menggunakan Facade
-
-```php
-use Efihub\Facades\Efihub;
-
-// GET request
-$response = Efihub::get('/users');
-
-// POST request
-$response = Efihub::post('/users', [
-    'name' => 'John Doe',
-    'email' => 'john@example.com'
-]);
-
-// PUT request
-$response = Efihub::put('/users/1', [
-    'name' => 'Jane Doe'
-]);
-
-// DELETE request
-$response = Efihub::delete('/users/1');
-```
-
-### Menggunakan Dependency Injection
-
-```php
-use Efihub\EfihubClient;
-
-class UserService
-{
-    public function __construct(private EfihubClient $efihub)
-    {
-    }
-
-    public function getAllUsers()
-    {
-        $response = $this->efihub->get('/users');
-
-        if ($response->successful()) {
-            return $response->json();
-        }
-
-        throw new Exception('Failed to fetch users');
-    }
-}
-```
-
-### Response Handling
-
-```php
-$response = Efihub::get('/users');
-
-// Check if successful
-if ($response->successful()) {
-    $data = $response->json();
-    $status = $response->status();
-}
-
-// Handle errors
-if ($response->failed()) {
-    $error = $response->json();
-    Log::error('EFIHUB API Error', $error);
-}
-```
-
 ## Konfigurasi
 
-File konfigurasi tersedia di `config/efihub.php` setelah publishing:
+File `config/efihub.php` (setelah publish):
 
 ```php
 return [
@@ -117,93 +86,101 @@ return [
 ];
 ```
 
-## Token Management
+Anda bisa override nilai default via `.env` jika endpoint EFIHUB yang digunakan berbeda.
 
-Package ini secara otomatis menangani:
+## Quick start
 
-- **Token Caching**: Access token di-cache selama 55 menit
-- **Auto Refresh**: Token otomatis di-refresh saat expired (401 response)
-- **Error Handling**: Automatic retry dengan token baru jika terjadi 401 error
-
-## API Methods
-
-### HTTP Methods
-
-| Method                                       | Description          |
-| -------------------------------------------- | -------------------- |
-| `get($endpoint, $options = [])`              | HTTP GET request     |
-| `post($endpoint, $options = [])`             | HTTP POST request    |
-| `put($endpoint, $options = [])`              | HTTP PUT request     |
-| `delete($endpoint, $options = [])`           | HTTP DELETE request  |
-| `request($method, $endpoint, $options = [])` | Generic HTTP request |
-
-### Token Management
-
-| Method             | Description                       |
-| ------------------ | --------------------------------- |
-| `getAccessToken()` | Mendapatkan access token (cached) |
-
-## Requirements
-
-- PHP ^8.0
-- Laravel ^8.0\|^9.0\|^10.0\|^11.0\|^12.0
-- Guzzle HTTP ^7.0
-
-## Contoh Penggunaan Lengkap
+Contoh sederhana menggunakan Facade di controller/service:
 
 ```php
-<?php
-
-namespace App\Services;
-
 use Efihub\Facades\Efihub;
-use Illuminate\Support\Facades\Log;
 
-class EfihubService
+// Mendapatkan daftar user (GET) dengan query params
+$response = Efihub::get('/user', ['page' => 1]);
+
+if ($response->successful()) {
+    $users = $response->json();
+}
+```
+
+## Penggunaan
+
+### Laravel Facade
+
+```php
+use Efihub\Facades\Efihub;
+
+// GET + query params
+$res = Efihub::get('/user', ['page' => 2, 'per_page' => 20]);
+
+// POST JSON body
+$res = Efihub::post('/orders', ['sku' => 'ABC', 'qty' => 2]);
+
+// PUT JSON body
+$res = Efihub::put('/orders/123', ['qty' => 3]);
+
+// DELETE
+$res = Efihub::delete('/orders/123');
+```
+
+Catatan: Parameter kedua akan dikirim sebagai query (GET) atau body (POST/PUT) sesuai dengan perilaku Laravel HTTP client.
+
+### Dependency Injection (Service/Controller)
+
+```php
+use Efihub\EfihubClient;
+
+class UserService
 {
-    public function createUser(array $userData): array
+    public function __construct(private EfihubClient $efihub) {}
+
+    public function getAll(): array
     {
-        try {
-            $response = Efihub::post('/users', $userData);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            throw new \Exception('Failed to create user: ' . $response->body());
-
-        } catch (\Exception $e) {
-            Log::error('EFIHUB Create User Error', [
-                'error' => $e->getMessage(),
-                'data' => $userData
-            ]);
-
-            throw $e;
-        }
-    }
-
-    public function getUsers(array $filters = []): array
-    {
-        $response = Efihub::get('/users', $filters);
-
-        return $response->successful()
-            ? $response->json()
-            : [];
+        $res = $this->efihub->get('/user');
+        return $res->successful() ? $res->json() : [];
     }
 }
 ```
 
-## Error Handling
+### Response & Error handling
 
-Package ini menangani beberapa skenario error:
+Semua method mengembalikan `Illuminate\Http\Client\Response`:
 
-1. **Token Fetch Error**: Exception akan di-throw jika gagal mendapatkan access token
-2. **401 Unauthorized**: Token otomatis di-refresh dan request di-retry
-3. **Network Errors**: Menggunakan Guzzle HTTP error handling
+```php
+$res = Efihub::get('/user/123');
+
+if ($res->successful()) {
+    $data = $res->json();
+} elseif ($res->failed()) {
+    // akses detail error dari body/status
+    logger()->error('EFIHUB error', [
+        'status' => $res->status(),
+        'body' => $res->json(),
+    ]);
+}
+```
+
+## Perilaku Autentikasi
+
+- Access token diambil via Client Credentials dan di-cache selama ±55 menit
+- Jika request mendapat 401, token akan dihapus, di-refresh, lalu request di-retry 1x otomatis
+
+## API
+
+Semua method berada pada `Efihub\EfihubClient` dan tersedia juga via Facade `Efihub`.
+
+- `get(string $endpoint, array $options = []) : Response`
+- `post(string $endpoint, array $options = []) : Response`
+- `put(string $endpoint, array $options = []) : Response`
+- `delete(string $endpoint, array $options = []) : Response`
+- `request(string $method, string $endpoint, array $options = []) : Response`
+- `getAccessToken() : string` — mengembalikan access token (cached)
+
+Tipe kembalian: `Illuminate\Http\Client\Response`.
 
 ## Testing
 
-Untuk testing, Anda dapat mock HTTP responses:
+Anda dapat memalsukan (fake) request HTTP untuk testing:
 
 ```php
 use Illuminate\Support\Facades\Http;
@@ -211,26 +188,32 @@ use Illuminate\Support\Facades\Http;
 Http::fake([
     'efihub.morefurniture.id/oauth/token' => Http::response([
         'access_token' => 'fake-token',
-        'expires_in' => 3600
-    ]),
+        'expires_in' => 3600,
+    ], 200),
     'efihub.morefurniture.id/api/*' => Http::response([
-        'data' => ['users' => []]
-    ])
+        'data' => ['users' => []],
+    ], 200),
 ]);
 ```
 
-## Contributing
+## Catatan Keamanan
+
+- Jangan gunakan library ini di browser/klien publik. Hanya untuk lingkungan server-side tepercaya.
+- Simpan kredensial di environment variable atau secrets manager.
+
+## Kontribusi
 
 1. Fork repository
 2. Buat feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push ke branch (`git push origin feature/amazing-feature`)
-5. Buat Pull Request
+3. Commit (`git commit -m 'Add amazing feature'`)
+4. Push (`git push origin feature/amazing-feature`)
+5. Buka Pull Request
 
-## License
+## Lisensi
 
-Package ini menggunakan lisensi MIT. Lihat file [LICENSE](LICENSE) untuk detail.
+MIT © Imam Nurcholis. Lihat file [LICENSE](LICENSE).
 
-## Support
+## Author & Link
 
-Untuk pertanyaan atau masalah, silakan buat issue di GitHub repository.
+- Author: [Imam Nurcholis](https://github.com/imamnc)
+- Website EFIHUB: https://efihub.morefurniture.id
