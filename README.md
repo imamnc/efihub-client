@@ -1,66 +1,43 @@
 <p align="center">
-    <a href="https://efihub.morefurniture.id">
-        <img src="https://efihub.morefurniture.id/img/logo.png" alt="EFIHUB" width="180" />
-    </a>
-    <h1 align="center">EFIHUB PHP/Laravel Client</h1>
-    <p align="center">
-        <em>A modern SDK to integrate with the EFIHUB platform using the OAuth 2.0 Client Credentials flow.</em>
-    </p>
-    <p align="center">
-        <a href="https://packagist.org/packages/imamnc/efihub-client"><img src="https://img.shields.io/packagist/v/imamnc/efihub-client.svg?logo=packagist" alt="packagist version" /></a>
-        <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" />
-        <a href="https://imamnc.com"><img src="https://img.shields.io/badge/author-Imam%20Nc-orange.svg" alt="author" /></a>
-    </p>
+        <a href="https://efihub.morefurniture.id">
+                <img src="https://efihub.morefurniture.id/img/logo.png" alt="EFIHUB" width="180" />
+        </a>
+        <h1 align="center">EFIHUB PHP/Laravel Client</h1>
+        <p align="center">
+                <em>A modern SDK to integrate with the EFIHUB platform using the OAuth 2.0 Client Credentials flow.</em>
+        </p>
+        <p align="center">
+                <a href="https://packagist.org/packages/imamnc/efihub-client"><img src="https://img.shields.io/packagist/v/imamnc/efihub-client.svg?logo=packagist" alt="packagist version" /></a>
+                <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" />
+                <a href="https://imamnc.com"><img src="https://img.shields.io/badge/author-Imam%20Nc-orange.svg" alt="author" /></a>
+        </p>
 </p>
 
-## Description
+## Introduction
 
-A modern SDK for integrating with the EFIHUB platform using the OAuth 2.0 Client Credentials flow. It provides simple HTTP helpers (GET/POST/PUT/DELETE), automatic token management, and native integration with the Laravel ecosystem.
+EFIHUB client for Laravel/PHP that authenticates using OAuth 2.0 Client Credentials and exposes:
 
-[EFIHUB](https://efihub.morefurniture.id/) is PT EFI’s centralized integration platform that connects multiple EFI applications into a single ecosystem. It offers:
+- A lightweight HTTP client (GET/POST/PUT/DELETE) with automatic token caching and retry on 401
+- Storage module to upload files and get public URLs
+- Websocket module to dispatch real-time events to channels
 
-- API Sharing Platform: discoverable and secured APIs across internal apps
-- Central Webhook Hub: real-time notifications with routing, retries, and logging
-- Central Scheduler: task automation, cron jobs, and background processing
-- Enterprise Security: OAuth 2.0, JWT, and audit trails
-- Unified Dashboard: observability across APIs, webhooks, schedulers, and more
-
-This package, `imamnc/efihub-client`, is the official PHP/Laravel client for EFIHUB’s REST API. It authenticates using the OAuth 2.0 Client Credentials flow and exposes simple HTTP helpers for GET, POST, PUT and DELETE.
-
-Important: because the Client Credentials flow requires a client secret, this library must only be used in trusted server-side environments (backend). Keep your credentials in environment variables or a secure secrets manager and never expose them to browsers or public clients.
-
-## Features
-
-- ✅ OAuth 2.0 Client Credentials authentication
-- ✅ Automatic access token management & caching
-- ✅ Automatic refresh on 401 (expired token) with one retry
-- ✅ HTTP client wrapper based on Laravel `Http` responses
-- ✅ Facade and Service Provider (auto-discovery)
-- ✅ Environment-based configuration
-
-## Requirements
-
-- PHP ^8.0
-- Laravel ^8.0 | ^9.0 | ^10.0 | ^11.0 | ^12.0
-- Guzzle HTTP ^7.0
+Designed for server-side apps only—do not expose your client secret to browsers.
 
 ## Installation
 
-### 1) Install via Composer
+1. Install the package
 
 ```bash
 composer require imamnc/efihub-client
 ```
 
-### 2) Publish configuration
+2. Publish config (optional; auto-discovery is enabled)
 
 ```bash
 php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=config
 ```
 
-### 3) Environment variables
-
-Add to your `.env`:
+3. Configure environment
 
 ```env
 EFIHUB_CLIENT_ID=your_client_id
@@ -69,124 +46,37 @@ EFIHUB_TOKEN_URL=https://efihub.morefurniture.id/oauth/token
 EFIHUB_API_URL=https://efihub.morefurniture.id/api
 ```
 
-## Configuration
+## Authentication
 
-The `config/efihub.php` file (after publishing):
+- Uses OAuth 2.0 Client Credentials to obtain an access token from `EFIHUB_TOKEN_URL`
+- Token is cached ~55 minutes; on 401, the client clears the cache and retries once
+- Config file: `config/efihub.php` (keys: client_id, client_secret, token_url, api_base_url)
 
-```php
-return [
-    'client_id' => env('EFIHUB_CLIENT_ID'),
-    'client_secret' => env('EFIHUB_CLIENT_SECRET'),
-    'token_url' => env('EFIHUB_TOKEN_URL', 'https://efihub.morefurniture.id/oauth/token'),
-    'api_base_url' => env('EFIHUB_API_URL', 'https://efihub.morefurniture.id/api'),
-];
-```
+## Http client module
 
-You can override the defaults via `.env` if you use a different EFIHUB endpoint.
-
-## Quick start
-
-A minimal example using the Facade in a controller or service:
-
-```php
-use Efihub\Facades\Efihub;
-
-// Get list of users (GET) with query params
-$response = Efihub::get('/user', ['page' => 1]);
-
-if ($response->successful()) {
-    $users = $response->json();
-}
-```
-
-## Usage
-
-### Laravel Facade
+Use the Facade for simple calls or inject `Efihub\EfihubClient`.
 
 ```php
 use Efihub\Facades\Efihub;
 
 // GET with query params
-$res = Efihub::get('/user', ['page' => 2, 'per_page' => 20]);
+$res = Efihub::get('/user', ['page' => 1]);
 
-// POST JSON body
+// POST JSON
 $res = Efihub::post('/orders', ['sku' => 'ABC', 'qty' => 2]);
 
-// PUT JSON body
+// PUT
 $res = Efihub::put('/orders/123', ['qty' => 3]);
 
 // DELETE
 $res = Efihub::delete('/orders/123');
-```
 
-Note: the second parameter will be sent as query parameters for GET requests or as the request body for POST/PUT requests following the Laravel HTTP client behavior.
-
-### Storage module (helper APIs)
-
-The storage service endpoints are accessible via `Efihub::storage()`:
-
-```php
-use Efihub\Facades\Efihub;
-
-// Upload a file (multipart/form-data)
-$response = Efihub::storage()->upload(
-    storage_path('app/public/photo.jpg'), // accepts string path or file spec
-    'uploads/' // end with '/' to auto-generate filename on server
-);
-
-// Get public URL (string|null)
-$publicUrl = Efihub::storage()->url('uploads/photo.jpg');
-
-// Check existence (bool)
-$exists = Efihub::storage()->exists('uploads/photo.jpg');
-
-// Get file size in bytes (int|null)
-$bytes = Efihub::storage()->size('uploads/photo.jpg');
-
-// Delete file (bool)
-$deleted = Efihub::storage()->delete('uploads/photo.jpg');
-```
-
-Upload accepts the same flexible file spec supported by `postMultipart()`:
-
-- `'file' => '/path/to/file.ext'` (string path)
-- `'file' => ['path' => '/path/to/file.ext', 'filename' => 'optional.ext', 'headers' => [...]]`
-- `'file' => ['contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...]]`
-
-Under the hood, the storage client calls these EFIHUB endpoints:
-
-- `GET /api/storage/url?path=...`
-- `GET /api/storage/size?path=...`
-- `GET /api/storage/exists?path=...`
-- `POST /api/storage/upload` (multipart form)
-- `DELETE /api/storage/delete` (with `path`)
-
-### Websocket module
-
-Dispatch real-time events to channels via EFIHUB Websocket service:
-
-```php
-use Efihub\Facades\Efihub;
-
-$res = Efihub::socket()->dispatch(
-    channel: 'orders:updates',
-    event: 'OrderUpdated',
-    data: [
-        'order_id' => 123,
-        'status' => 'updated',
-    ]
-);
-
-if ($res->failed()) {
-    // handle error, e.g. log message from API
+if ($res->successful()) {
+    $data = $res->json();
 }
 ```
 
-Endpoint used under the hood:
-
-- `POST /api/websocket/dispatch` with JSON body `{ channel, event, data }`
-
-### Dependency Injection (Service/Controller)
+Dependency Injection example:
 
 ```php
 use Efihub\EfihubClient;
@@ -195,7 +85,7 @@ class UserService
 {
     public function __construct(private EfihubClient $efihub) {}
 
-    public function getAll(): array
+    public function list(): array
     {
         $res = $this->efihub->get('/user');
         return $res->successful() ? $res->json() : [];
@@ -203,124 +93,71 @@ class UserService
 }
 ```
 
-### Multipart upload (file attachments)
+## Storage module
 
-Upload one or multiple files with additional fields:
+Common Laravel use case: upload an `UploadedFile` and get its public URL.
+
+```php
+use Illuminate\Http\Request;
+use Efihub\Facades\Efihub;
+
+class MediaController
+{
+    public function store(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'max:10240'], // 10MB
+        ]);
+
+        $uploadedFile = $request->file('file'); // Illuminate\Http\UploadedFile
+
+        // Upload to a folder; end with '/' to auto-generate a filename on server
+        $resp = Efihub::storage()->upload($uploadedFile, 'uploads/'.date('Y/m/d').'/');
+
+        if ($resp->failed()) {
+            return back()->withErrors($resp->json('message') ?? 'Upload failed');
+        }
+
+        $path = $resp->json('data.path') ?? $resp->json('path');
+        $url  = $path ? Efihub::storage()->url($path) : null;
+
+        return back()->with('url', $url);
+    }
+}
+```
+
+Other helpers:
+
+```php
+Efihub::storage()->exists('uploads/photo.jpg'); // bool
+Efihub::storage()->size('uploads/photo.jpg');   // int|null (bytes)
+Efihub::storage()->delete('uploads/photo.jpg'); // bool
+```
+
+Notes:
+
+- upload() accepts Laravel/Symfony UploadedFile, string path, or raw contents
+- Endpoints used: GET /storage/url|size|exists, POST /storage/upload, DELETE /storage/delete
+
+## Websocket module
+
+Dispatch real-time events to channels (e.g. from a listener or job):
 
 ```php
 use Efihub\Facades\Efihub;
 
-// Single file by path
-$res = Efihub::postMultipart('/documents', [
-    'type' => 'invoice',
-], [
-    'file' => storage_path('app/invoices/jan.pdf'),
-]);
-
-// Multiple files and custom filenames
-$res = Efihub::postMultipart('/documents/bulk', [
-    'batch' => '2025-10',
-], [
-    'files' => [
-        ['path' => storage_path('app/invoices/jan.pdf')],
-        ['path' => storage_path('app/invoices/feb.pdf'), 'filename' => 'invoice-feb.pdf'],
-    ],
-]);
-
-// Raw contents
-$res = Efihub::postMultipart('/upload', [
-    'note' => 'generated on the fly',
-], [
-    'file' => [
-        'contents' => file_get_contents(storage_path('app/tmp/report.csv')),
-        'filename' => 'report.csv',
-        'headers' => ['Content-Type' => 'text/csv'],
-    ],
-]);
+Efihub::socket()->dispatch(
+    channel: 'orders:updates',
+    event: 'OrderUpdated',
+    data: ['order_id' => 123, 'status' => 'updated']
+);
 ```
 
-Supported file specs:
+Endpoint used: POST `/api/websocket/dispatch` with JSON `{ channel, event, data }`.
 
-- `'field' => '/path/to/file.ext'`
-- `'field' => ['path' => '/path/to/file.ext', 'filename' => 'optional.ext', 'headers' => [...]]`
-- `'field' => ['contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...]]`
-- `'field' => ['/path/a.pdf', '/path/b.pdf']` (multiple files for the same field)
+## License & Author
 
-Note: for raw contents, use the associative format with the `contents` key to avoid ambiguity.
+MIT © Imam Nurcholis. See [LICENSE](LICENSE).
 
-### Response & error handling
-
-All methods return `Illuminate\Http\Client\Response`:
-
-```php
-$res = Efihub::get('/user/123');
-
-if ($res->successful()) {
-    $data = $res->json();
-} elseif ($res->failed()) {
-    // access error details from body/status
-    logger()->error('EFIHUB error', [
-        'status' => $res->status(),
-        'body' => $res->json(),
-    ]);
-}
-```
-
-## Authentication behavior
-
-- Access tokens are obtained via Client Credentials and cached (approx. 55 minutes)
-- If a request returns 401, the token is cleared, refreshed, and the request is retried once automatically
-
-## API
-
-All methods live on `Efihub\\EfihubClient` and are also available via the `Efihub` Facade.
-
-- `get(string $endpoint, array $options = []) : Response`
-- `post(string $endpoint, array $options = []) : Response`
-- `put(string $endpoint, array $options = []) : Response`
-- `delete(string $endpoint, array $options = []) : Response`
-- `postMultipart(string $endpoint, array $fields = [], array $files = []) : Response` — send multipart/form-data with file attachment(s)
-- `request(string $method, string $endpoint, array $options = []) : Response`
-- `getAccessToken() : string` — returns the cached access token
-
-Return type: `Illuminate\\Http\\Client\\Response`.
-
-## Testing
-
-You can fake HTTP requests for testing:
-
-```php
-use Illuminate\Support\Facades\Http;
-
-Http::fake([
-    'efihub.morefurniture.id/oauth/token' => Http::response([
-        'access_token' => 'fake-token',
-        'expires_in' => 3600,
-    ], 200),
-    'efihub.morefurniture.id/api/*' => Http::response([
-        'data' => ['users' => []],
-    ], 200),
-]);
-```
-
-## Security notes
-
-- Do not use this library in browser/public clients. It is intended for trusted server-side environments only.
-- Store credentials in environment variables or a secure secrets manager.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-MIT © Imam Nurcholis. See the [LICENSE](LICENSE) file for details.
-
-## Author & links
-
-- Author: [Imam Nurcholis](https://github.com/imamnc)
+- Author: https://github.com/imamnc
 - EFIHUB: https://efihub.morefurniture.id
