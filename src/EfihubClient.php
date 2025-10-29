@@ -4,9 +4,16 @@ namespace Efihub;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Efihub\StorageClient;
+use Efihub\WebsocketClient;
 
 class EfihubClient
 {
+    /** @var StorageClient|null */
+    private ?StorageClient $storage = null;
+    /** @var WebsocketClient|null */
+    private ?WebsocketClient $socket = null;
+
     public function getAccessToken(): string
     {
         return Cache::remember('efihub_access_token', 55 * 60, function () {
@@ -154,5 +161,29 @@ class EfihubClient
         }
 
         throw new \InvalidArgumentException("Invalid file specification for field '{$field}'.");
+    }
+
+    /**
+     * Module accessor for Storage Service APIs.
+     */
+    public function storage(): StorageClient
+    {
+        if ($this->storage === null) {
+            $this->storage = new StorageClient($this);
+        }
+
+        return $this->storage;
+    }
+
+    /**
+     * Module accessor for Websocket Service APIs.
+     */
+    public function socket(): WebsocketClient
+    {
+        if ($this->socket === null) {
+            $this->socket = new WebsocketClient($this);
+        }
+
+        return $this->socket;
     }
 }

@@ -121,6 +121,71 @@ $res = Efihub::delete('/orders/123');
 
 Note: the second parameter will be sent as query parameters for GET requests or as the request body for POST/PUT requests following the Laravel HTTP client behavior.
 
+### Storage module (helper APIs)
+
+The storage service endpoints are accessible via `Efihub::storage()`:
+
+```php
+use Efihub\Facades\Efihub;
+
+// Upload a file (multipart/form-data)
+$response = Efihub::storage()->upload(
+    storage_path('app/public/photo.jpg'), // accepts string path or file spec
+    'uploads/' // end with '/' to auto-generate filename on server
+);
+
+// Get public URL (string|null)
+$publicUrl = Efihub::storage()->url('uploads/photo.jpg');
+
+// Check existence (bool)
+$exists = Efihub::storage()->exists('uploads/photo.jpg');
+
+// Get file size in bytes (int|null)
+$bytes = Efihub::storage()->size('uploads/photo.jpg');
+
+// Delete file (bool)
+$deleted = Efihub::storage()->delete('uploads/photo.jpg');
+```
+
+Upload accepts the same flexible file spec supported by `postMultipart()`:
+
+- `'file' => '/path/to/file.ext'` (string path)
+- `'file' => ['path' => '/path/to/file.ext', 'filename' => 'optional.ext', 'headers' => [...]]`
+- `'file' => ['contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...]]`
+
+Under the hood, the storage client calls these EFIHUB endpoints:
+
+- `GET /api/storage/url?path=...`
+- `GET /api/storage/size?path=...`
+- `GET /api/storage/exists?path=...`
+- `POST /api/storage/upload` (multipart form)
+- `DELETE /api/storage/delete` (with `path`)
+
+### Websocket module
+
+Dispatch real-time events to channels via EFIHUB Websocket service:
+
+```php
+use Efihub\Facades\Efihub;
+
+$res = Efihub::socket()->dispatch(
+    channel: 'orders:updates',
+    event: 'OrderUpdated',
+    data: [
+        'order_id' => 123,
+        'status' => 'updated',
+    ]
+);
+
+if ($res->failed()) {
+    // handle error, e.g. log message from API
+}
+```
+
+Endpoint used under the hood:
+
+- `POST /api/websocket/dispatch` with JSON body `{ channel, event, data }`
+
 ### Dependency Injection (Service/Controller)
 
 ```php

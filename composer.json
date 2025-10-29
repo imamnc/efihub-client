@@ -18,10 +18,10 @@
     "client",
     "oauth2"
   ],
-  "homepage": "https://github.com/imamnc/efihub/client",
+  "homepage": "https://github.com/imamnc/efihub-client",
   "support": {
-    "issues": "https://github.com/imamnc/efihub/client/issues",
-    "source": "https://github.com/imamnc/efihub/client"
+    "issues": "https://github.com/imamnc/efihub-client/issues",
+    "source": "https://github.com/imamnc/efihub-client"
   },
   "autoload": {
     "psr-4": {
