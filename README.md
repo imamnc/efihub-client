@@ -138,6 +138,51 @@ class UserService
 }
 ```
 
+### Multipart upload (file attachments)
+
+Upload one or multiple files with additional fields:
+
+```php
+use Efihub\Facades\Efihub;
+
+// Single file by path
+$res = Efihub::postMultipart('/documents', [
+    'type' => 'invoice',
+], [
+    'file' => storage_path('app/invoices/jan.pdf'),
+]);
+
+// Multiple files and custom filenames
+$res = Efihub::postMultipart('/documents/bulk', [
+    'batch' => '2025-10',
+], [
+    'files' => [
+        ['path' => storage_path('app/invoices/jan.pdf')],
+        ['path' => storage_path('app/invoices/feb.pdf'), 'filename' => 'invoice-feb.pdf'],
+    ],
+]);
+
+// Raw contents
+$res = Efihub::postMultipart('/upload', [
+    'note' => 'generated on the fly',
+], [
+    'file' => [
+        'contents' => file_get_contents(storage_path('app/tmp/report.csv')),
+        'filename' => 'report.csv',
+        'headers' => ['Content-Type' => 'text/csv'],
+    ],
+]);
+```
+
+Supported file specs:
+
+- `'field' => '/path/to/file.ext'`
+- `'field' => ['path' => '/path/to/file.ext', 'filename' => 'optional.ext', 'headers' => [...]]`
+- `'field' => ['contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...]]`
+- `'field' => ['/path/a.pdf', '/path/b.pdf']` (multiple files for the same field)
+
+Note: for raw contents, use the associative format with the `contents` key to avoid ambiguity.
+
 ### Response & error handling
 
 All methods return `Illuminate\Http\Client\Response`:
@@ -169,6 +214,7 @@ All methods live on `Efihub\\EfihubClient` and are also available via the `Efihu
 - `post(string $endpoint, array $options = []) : Response`
 - `put(string $endpoint, array $options = []) : Response`
 - `delete(string $endpoint, array $options = []) : Response`
+- `postMultipart(string $endpoint, array $fields = [], array $files = []) : Response` — send multipart/form-data with file attachment(s)
 - `request(string $method, string $endpoint, array $options = []) : Response`
 - `getAccessToken() : string` — returns the cached access token
 
