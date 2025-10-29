@@ -112,14 +112,11 @@ class MediaController
         $uploadedFile = $request->file('file'); // Illuminate\Http\UploadedFile
 
         // Upload to a folder; end with '/' to auto-generate a filename on server
-        $resp = Efihub::storage()->upload($uploadedFile, 'uploads/'.date('Y/m/d').'/');
+        $url = Efihub::storage()->upload($uploadedFile, 'uploads/'.date('Y/m/d').'/');
 
-        if ($resp->failed()) {
-            return back()->withErrors($resp->json('message') ?? 'Upload failed');
+        if ($url === false) {
+            return back()->withErrors('Upload failed');
         }
-
-        $path = $resp->json('data.path') ?? $resp->json('path');
-        $url  = $path ? Efihub::storage()->url($path) : null;
 
         return back()->with('url', $url);
     }
@@ -146,11 +143,15 @@ Dispatch real-time events to channels (e.g. from a listener or job):
 ```php
 use Efihub\Facades\Efihub;
 
-Efihub::socket()->dispatch(
+$ok = Efihub::socket()->dispatch(
     channel: 'orders:updates',
     event: 'OrderUpdated',
     data: ['order_id' => 123, 'status' => 'updated']
 );
+
+if (!$ok) {
+    // handle failure (log, retry, etc.)
+}
 ```
 
 Endpoint used: POST `/api/websocket/dispatch` with JSON `{ channel, event, data }`.

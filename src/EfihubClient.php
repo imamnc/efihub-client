@@ -4,8 +4,8 @@ namespace Efihub;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Efihub\StorageClient;
-use Efihub\WebsocketClient;
+use Efihub\Modules\StorageClient;
+use Efihub\Modules\WebsocketClient;
 
 class EfihubClient
 {

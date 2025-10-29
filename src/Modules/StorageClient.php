@@ -1,6 +1,8 @@
 <?php
 
-namespace Efihub;
+namespace Efihub\Modules;
+
+use Efihub\EfihubClient;
 
 /**
  * Storage Service client for EFIHUB.
