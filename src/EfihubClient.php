@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Efihub\Modules\StorageClient;
 use Efihub\Modules\WebsocketClient;
+use Efihub\Modules\WhatsappClient;
 
 class EfihubClient
 {
@@ -13,6 +14,8 @@ class EfihubClient
     private ?StorageClient $storage = null;
     /** @var WebsocketClient|null */
     private ?WebsocketClient $socket = null;
+    /** @var WhatsappClient|null */
+    private ?Modules\WhatsappClient $whatsapp = null;
 
     public function getAccessToken(): string
     {
@@ -185,5 +188,17 @@ class EfihubClient
         }
 
         return $this->socket;
+    }
+
+    /**
+     * Module accessor for Whatsapp Service APIs.
+     */
+    public function whatsapp(): WhatsappClient
+    {
+        if ($this->whatsapp === null) {
+            $this->whatsapp = new WhatsappClient($this);
+        }
+
+        return $this->whatsapp;
     }
 }

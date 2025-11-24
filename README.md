@@ -156,6 +156,122 @@ if (!$ok) {
 
 Endpoint used: POST `/api/websocket/dispatch` with JSON `{ channel, event, data }`.
 
+## WhatsApp module
+
+Send WhatsApp messages (single recipient or group) with optional reference metadata and file attachments.
+
+### Methods
+
+`Efihub::whatsapp()` returns an instance of `Efihub\Modules\WhatsappClient` exposing:
+
+- `sendMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool`
+- `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool`
+- `sendAttachment(string $sender, string $to, string $message, mixed $attachment): bool`
+- `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment): bool`
+
+Each returns `true` on HTTP success (2xx), otherwise `false`.
+
+### Simple text message
+
+```php
+use Efihub\Facades\Efihub;
+
+$ok = Efihub::whatsapp()->sendMessage(
+    sender: '+6281234567890',
+    to: '+628109998877',
+    message: 'Halo! Tes WhatsApp.'
+);
+
+if (!$ok) {
+    // log or retry
+}
+```
+
+### Group message
+
+```php
+$ok = Efihub::whatsapp()->sendGroupMessage(
+    sender: '+6281234567890',
+    to: 'group-abc123', // group identifier
+    message: 'Halo semua!'
+);
+```
+
+### Attachment (single file)
+
+Supports the same flexible file specs as `postMultipart()`:
+
+```php
+// Path string
+$ok = Efihub::whatsapp()->sendAttachment(
+    sender: '+6281234567890',
+    to: '+628109998877',
+    message: 'Berikut invoice',
+    attachment: storage_path('app/invoices/jan.pdf'),
+);
+
+// Raw contents with custom filename & headers
+$ok = Efihub::whatsapp()->sendAttachment(
+    sender: '+6281234567890',
+    to: '+628109998877',
+    message: 'Data CSV',
+    attachment: [
+        'contents' => file_get_contents(storage_path('app/tmp/report.csv')),
+        'filename' => 'report.csv',
+        'headers' => ['Content-Type' => 'text/csv'],
+    ],
+);
+```
+
+### Multiple attachments to a group
+
+```php
+$ok = Efihub::whatsapp()->sendGroupAttachment(
+    sender: '+6281234567890',
+    to: 'group-abc123',
+    message: 'Semua dokumen',
+    attachment: [
+        storage_path('app/docs/a.pdf'),
+        storage_path('app/docs/b.pdf'),
+    ],
+);
+```
+
+### File spec formats
+
+- `/path/to/file.ext`
+- `[ 'path' => '/path/to/file.ext', 'filename' => 'custom.ext', 'headers' => ['Content-Type' => 'application/pdf'] ]`
+- `[ 'contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...] ]`
+- `[ '/path/a.jpg', '/path/b.jpg' ]` (multiple files)
+
+### Reference metadata
+
+Optional `ref_id` / `ref_url` let you correlate outbound messages with internal entities (orders, tickets, etc.). Include them when auditing or reconciling.
+
+### Error inspection
+
+The helpers only return boolean. For full details grab the raw response:
+
+```php
+$client = app(\Efihub\EfihubClient::class);
+$response = $client->post('/whatsapp/send_message', [ /* payload */ ]);
+if ($response->failed()) {
+    logger()->error('WA send failed', [
+        'status' => $response->status(),
+        'body' => $response->json(),
+    ]);
+}
+```
+
+### Endpoints used
+
+- `POST /whatsapp/send_message`
+- `POST /whatsapp/group/send_message`
+- `POST /whatsapp/send_message_with_attachment`
+- `POST /whatsapp/group/send_message_with_attachment`
+
+> Adjust paths if your EFIHUB deployment customizes routing.
+
 ## License & Author
 
 MIT © Imam Nurcholis. See [LICENSE](LICENSE).
