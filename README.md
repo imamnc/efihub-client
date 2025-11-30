@@ -20,6 +20,9 @@ EFIHUB client for Laravel/PHP that authenticates using OAuth 2.0 Client Credenti
 - A lightweight HTTP client (GET/POST/PUT/DELETE) with automatic token caching and retry on 401
 - Storage module to upload files and get public URLs
 - Websocket module to dispatch real-time events to channels
+- WhatsApp module to send messages (single/group) and file attachments
+- SSO module to generate authorization URL and fetch user profile after callback
+- Multipart form-data helper (`postMultipart`) for uploading documents or media
 
 Designed for server-side apps only—do not expose your client secret to browsers.
 
@@ -73,6 +76,14 @@ $res = Efihub::delete('/orders/123');
 
 if ($res->successful()) {
     $data = $res->json();
+}
+
+// Multipart upload (form-data + file attachment)
+$uploadRes = Efihub::postMultipart('/documents', ['type' => 'invoice'], [
+    'file' => storage_path('app/invoices/jan.pdf'),
+]);
+if ($uploadRes->failed()) {
+    // handle failure
 }
 ```
 
@@ -155,6 +166,51 @@ if (!$ok) {
 ```
 
 Endpoint used: POST `/api/websocket/dispatch` with JSON `{ channel, event, data }`.
+
+## SSO module
+
+Centralized login flow: generate authorization URL, redirect user, then exchange `redirect_token` for user data.
+
+### Methods
+
+`Efihub::sso()` returns `Efihub\Modules\SSOClient` with:
+
+- `login(): string|false` – returns authorization URL or `false`.
+- `userData(string $redirectToken): array|false` – returns user info array or `false`.
+
+### Generate authorization URL
+
+```php
+use Efihub\Facades\Efihub;
+
+$authUrl = Efihub::sso()->login();
+if ($authUrl === false) {
+    // log error
+}
+// return redirect()->away($authUrl);
+```
+
+### Handle callback
+
+Assuming your callback route receives `redirect_token`:
+
+```php
+$token = request('redirect_token');
+$user = Efihub::sso()->userData($token);
+
+if ($user === false) {
+    // invalid token or request failed
+} else {
+    // $user['email'], $user['name'], ...
+}
+```
+
+### Endpoints
+
+- `POST /sso/authorize`
+- `GET /sso/user`
+
+Note: Security enhancements like `state` / `nonce` can be layered externally; ensure you bind the session before redirecting.
 
 ## WhatsApp module
 

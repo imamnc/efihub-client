@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Efihub\Modules\StorageClient;
 use Efihub\Modules\WebsocketClient;
 use Efihub\Modules\WhatsappClient;
+use Efihub\Modules\SSOClient;
 
 class EfihubClient
 {
@@ -16,6 +17,8 @@ class EfihubClient
     private ?WebsocketClient $socket = null;
     /** @var WhatsappClient|null */
     private ?Modules\WhatsappClient $whatsapp = null;
+    /** @var SSOClient|null */
+    private ?SSOClient $sso = null;
 
     public function getAccessToken(): string
     {
@@ -164,6 +167,18 @@ class EfihubClient
         }
 
         throw new \InvalidArgumentException("Invalid file specification for field '{$field}'.");
+    }
+
+    /**
+     * Module accessor for Storage Service APIs.
+     */
+    public function sso(): SSOClient
+    {
+        if ($this->sso === null) {
+            $this->sso = new SSOClient($this);
+        }
+
+        return $this->sso;
     }
 
     /**
