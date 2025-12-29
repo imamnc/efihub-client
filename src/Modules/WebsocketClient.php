@@ -11,7 +11,13 @@ use Efihub\EfihubClient;
  */
 class WebsocketClient
 {
-    public function __construct(private EfihubClient $client) {}
+    /** @var EfihubClient */
+    private $client;
+
+    public function __construct(EfihubClient $client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Dispatch an event to a websocket channel.
@@ -22,7 +28,10 @@ class WebsocketClient
      * @param array  $extra   Extra fields if the API accepts more, merged into the payload
      * @return bool           True on success, false on failure
      */
-    public function dispatch(string $channel, string $event, mixed $data, array $extra = []): bool
+    /**
+     * @param mixed $data
+     */
+    public function dispatch(string $channel, string $event, $data, array $extra = []): bool
     {
         $payload = array_merge([
             'channel' => $channel,

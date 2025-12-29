@@ -11,7 +11,13 @@ use Efihub\EfihubClient;
  */
 class WhatsappClient
 {
-    public function __construct(private EfihubClient $client) {}
+    /** @var EfihubClient */
+    private $client;
+
+    public function __construct(EfihubClient $client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Send message via Whatsapp.
@@ -82,7 +88,10 @@ class WhatsappClient
      * @param mixed $attachment File spec accepted by EfihubClient::postMultipart (string path, assoc with 'path'/'contents', or array list)
      * @return bool True on success, false on failure
      */
-    public function sendAttachment(string $sender, string $to, string $message, mixed $attachment): bool
+    /**
+     * @param mixed $attachment
+     */
+    public function sendAttachment(string $sender, string $to, string $message, $attachment): bool
     {
         $fields = [
             'sender' => $sender,
@@ -111,7 +120,10 @@ class WhatsappClient
      * @param mixed $attachment File spec accepted by EfihubClient::postMultipart (string path, assoc with 'path'/'contents', or array list)
      * @return bool True on success, false on failure
      */
-    public function sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment): bool
+    /**
+     * @param mixed $attachment
+     */
+    public function sendGroupAttachment(string $sender, string $to, string $message, $attachment): bool
     {
         $fields = [
             'sender' => $sender,

@@ -28,7 +28,9 @@ class EfihubClient
                 'client_secret' => config('efihub.client_secret'),
             ]);
 
-            throw_if($response->failed(), new \Exception('Failed to fetch EFIHUB token'));
+            if ($response->failed()) {
+                throw new \Exception('Failed to fetch EFIHUB token');
+            }
 
             return $response->json('access_token');
         });

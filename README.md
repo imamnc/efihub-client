@@ -34,10 +34,34 @@ Designed for server-side apps only—do not expose your client secret to browser
 composer require imamnc/efihub-client
 ```
 
-2. Publish config (optional; auto-discovery is enabled)
+2. Publish config (Laravel only; optional; auto-discovery is enabled)
 
 ```bash
 php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=config
+```
+
+### Lumen 7 (Illuminate 7.30.4)
+
+- Register the service provider in `bootstrap/app.php`:
+
+```php
+$app->register(Efihub\EfihubServiceProvider::class);
+```
+
+- Ensure config is enabled and load the package config:
+
+```php
+$app->configure('efihub');
+```
+
+- Copy the config file manually to `config/efihub.php` (Lumen does not support `vendor:publish`).
+
+- If you want to use the Facade, enable facades in Lumen and add an alias:
+
+```php
+$app->withFacades();
+
+class_alias(Efihub\Facades\Efihub::class, 'Efihub');
 ```
 
 3. Configure environment
@@ -94,7 +118,13 @@ use Efihub\EfihubClient;
 
 class UserService
 {
-    public function __construct(private EfihubClient $efihub) {}
+    /** @var EfihubClient */
+    private $efihub;
+
+    public function __construct(EfihubClient $efihub)
+    {
+        $this->efihub = $efihub;
+    }
 
     public function list(): array
     {
@@ -155,9 +185,9 @@ Dispatch real-time events to channels (e.g. from a listener or job):
 use Efihub\Facades\Efihub;
 
 $ok = Efihub::socket()->dispatch(
-    channel: 'orders:updates',
-    event: 'OrderUpdated',
-    data: ['order_id' => 123, 'status' => 'updated']
+    'orders:updates',
+    'OrderUpdated',
+    ['order_id' => 123, 'status' => 'updated']
 );
 
 if (!$ok) {

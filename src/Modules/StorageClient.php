@@ -11,7 +11,13 @@ use Efihub\EfihubClient;
  */
 class StorageClient
 {
-    public function __construct(private EfihubClient $client) {}
+    /** @var EfihubClient */
+    private $client;
+
+    public function __construct(EfihubClient $client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Upload a file to storage.
@@ -21,7 +27,11 @@ class StorageClient
      * @param array $fields Additional form fields if needed
      * @return string|false URL of uploaded file on success, false on failure
      */
-    public function upload(mixed $file, string $path, array $fields = []): string|false
+    /**
+     * @param mixed $file
+     * @return string|false
+     */
+    public function upload($file, string $path, array $fields = [])
     {
         $fields = array_merge(['path' => $path], $fields);
 

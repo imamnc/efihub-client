@@ -11,7 +11,13 @@ use Efihub\EfihubClient;
  */
 class SSOClient
 {
-    public function __construct(private EfihubClient $client) {}
+    /** @var EfihubClient */
+    private $client;
+
+    public function __construct(EfihubClient $client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Generate authorization URL for SSO login.
