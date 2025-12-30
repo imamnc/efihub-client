@@ -16,12 +16,20 @@ class EfihubClient
     /** @var WebsocketClient|null */
     private ?WebsocketClient $socket = null;
     /** @var WhatsappClient|null */
-    private ?Modules\WhatsappClient $whatsapp = null;
+    private ?WhatsappClient $whatsapp = null;
     /** @var SSOClient|null */
     private ?SSOClient $sso = null;
 
     public function getAccessToken(): string
     {
+        $cached = Cache::get('efihub_access_token');
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+        if ($cached !== null) {
+            Cache::forget('efihub_access_token');
+        }
+
         return Cache::remember('efihub_access_token', 55 * 60, function () {
             $response = Http::asForm()->post(config('efihub.token_url'), [
                 'client_id' => config('efihub.client_id'),
@@ -32,7 +40,28 @@ class EfihubClient
                 throw new \Exception('Failed to fetch EFIHUB token');
             }
 
-            return $response->json('access_token');
+            $payload = $response->json();
+            $accessToken = is_array($payload) && array_key_exists('access_token', $payload)
+                ? $payload['access_token']
+                : null;
+
+            if (is_string($accessToken) && $accessToken !== '') {
+                return $accessToken;
+            }
+
+            // Some APIs nest token info; try common fallbacks.
+            if (is_array($accessToken)) {
+                $candidate = $accessToken['token'] ?? $accessToken['access_token'] ?? null;
+                if (is_string($candidate) && $candidate !== '') {
+                    return $candidate;
+                }
+            }
+
+            $tokenType = is_object($accessToken) ? get_class($accessToken) : gettype($accessToken);
+            $keys = is_array($payload) ? implode(', ', array_slice(array_keys($payload), 0, 20)) : gettype($payload);
+            throw new \UnexpectedValueException(
+                "EFIHUB token response missing string access_token (got {$tokenType}). Payload keys: {$keys}"
+            );
         });
     }
 
