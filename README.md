@@ -20,43 +20,69 @@ EFIHUB client for Laravel/PHP that authenticates using OAuth 2.0 Client Credenti
 - A lightweight HTTP client (GET/POST/PUT/DELETE) with automatic token caching and retry on 401
 - Storage module to upload files and get public URLs
 - Websocket module to dispatch real-time events to channels
-- WhatsApp module to send messages (single/group) and file attachments
+- WhatsApp module to manage agents (list, QR code, status, phone validation) and send messages (single/group) and file attachments
 - SSO module to generate authorization URL and fetch user profile after callback
-- Multipart form-data helper (`postMultipart`) for uploading documents or media
 
 Designed for server-side apps only—do not expose your client secret to browsers.
 
-## Installation
+---
 
-1. Install the package
+## Table of Contents
+
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Framework Setup](#framework-setup)
+  - [Environment Variables](#environment-variables)
+  - [Authentication](#authentication)
+- [HTTP Client](#http-client)
+  - [Basic Usage](#basic-usage)
+  - [Dependency Injection](#dependency-injection)
+- [Modules](#modules)
+  - [Storage](#storage-module)
+  - [WebSocket](#websocket-module)
+  - [SSO](#sso-module)
+  - [WhatsApp](#whatsapp-module)
+- [License & Author](#license--author)
+
+---
+
+## Getting Started
+
+### Installation
+
+Install the package via Composer:
 
 ```bash
 composer require imamnc/efihub-client
 ```
 
-2. Publish config (Laravel only; optional; auto-discovery is enabled)
+### Framework Setup
+
+#### Laravel
+
+Auto-discovery is enabled. Optionally publish the config file:
 
 ```bash
 php artisan vendor:publish --provider="Efihub\EfihubServiceProvider" --tag=config
 ```
 
-### Lumen 7 (Illuminate 7.30.4)
+#### Lumen 7 (Illuminate 7.30.4)
 
-- Register the service provider in `bootstrap/app.php`:
+Register the service provider in `bootstrap/app.php`:
 
 ```php
 $app->register(Efihub\EfihubServiceProvider::class);
 ```
 
-- Ensure config is enabled and load the package config:
+Enable and load the package config:
 
 ```php
 $app->configure('efihub');
 ```
 
-- Copy the config file manually to `config/efihub.php` (Lumen does not support `vendor:publish`).
+Copy the config file manually to `config/efihub.php` (Lumen does not support `vendor:publish`).
 
-- If you want to use the Facade, enable facades in Lumen and add an alias:
+To use the Facade, enable facades and add an alias:
 
 ```php
 $app->withFacades();
@@ -64,7 +90,9 @@ $app->withFacades();
 class_alias(Efihub\Facades\Efihub::class, 'Efihub');
 ```
 
-3. Configure environment
+### Environment Variables
+
+Add the following to your `.env` file:
 
 ```env
 EFIHUB_CLIENT_ID=your_client_id
@@ -73,15 +101,23 @@ EFIHUB_TOKEN_URL=https://efihub.morefurniture.id/oauth/token
 EFIHUB_API_URL=https://efihub.morefurniture.id/api
 ```
 
-## Authentication
+These map to `config/efihub.php` keys: `client_id`, `client_secret`, `token_url`, `api_base_url`.
 
-- Uses OAuth 2.0 Client Credentials to obtain an access token from `EFIHUB_TOKEN_URL`
-- Token is cached ~55 minutes; on 401, the client clears the cache and retries once
-- Config file: `config/efihub.php` (keys: client_id, client_secret, token_url, api_base_url)
+### Authentication
 
-## Http client module
+The client uses the **OAuth 2.0 Client Credentials** flow automatically:
 
-Use the Facade for simple calls or inject `Efihub\EfihubClient`.
+- An access token is fetched from `EFIHUB_TOKEN_URL` using your client credentials.
+- The token is cached for ~55 minutes; on a `401` response, the cache is cleared and the request is retried once.
+- No manual token management is needed—simply use the Facade or inject the client.
+
+---
+
+## HTTP Client
+
+The base client handles authentication and exposes standard HTTP verbs. Use it directly for any EFIHUB API endpoint, or use the higher-level [Modules](#modules) for specific services.
+
+### Basic Usage
 
 ```php
 use Efihub\Facades\Efihub;
@@ -111,7 +147,7 @@ if ($uploadRes->failed()) {
 }
 ```
 
-Dependency Injection example:
+### Dependency Injection
 
 ```php
 use Efihub\EfihubClient;
@@ -134,9 +170,30 @@ class UserService
 }
 ```
 
-## Storage module
+---
 
-Common Laravel use case: upload an `UploadedFile` and get its public URL.
+## Modules
+
+All modules are accessed via the `Efihub` Facade (e.g. `Efihub::storage()`, `Efihub::whatsapp()`).
+
+---
+
+### Storage module
+
+Upload files and manage them on the EFIHUB storage service.
+
+#### Methods
+
+`Efihub::storage()` returns `Efihub\Modules\StorageClient` with:
+
+- `upload(mixed $file, string $path): string|false` – uploads a file; returns the public URL or `false` on failure.
+- `exists(string $path): bool` – checks whether a file exists.
+- `size(string $path): int|null` – returns file size in bytes, or `null` on failure.
+- `delete(string $path): bool` – deletes a file; returns `true` on success.
+
+`upload()` accepts a Laravel/Symfony `UploadedFile`, a string path, or raw file contents. End `$path` with `/` to let the server auto-generate the filename.
+
+#### Usage
 
 ```php
 use Illuminate\Http\Request;
@@ -147,12 +204,12 @@ class MediaController
     public function store(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'max:10240'], // 10MB
+            'file' => ['required', 'file', 'max:10240'], // 10 MB
         ]);
 
         $uploadedFile = $request->file('file'); // Illuminate\Http\UploadedFile
 
-        // Upload to a folder; end with '/' to auto-generate a filename on server
+        // End path with '/' to auto-generate filename on the server
         $url = Efihub::storage()->upload($uploadedFile, 'uploads/'.date('Y/m/d').'/');
 
         if ($url === false) {
@@ -172,14 +229,27 @@ Efihub::storage()->size('uploads/photo.jpg');   // int|null (bytes)
 Efihub::storage()->delete('uploads/photo.jpg'); // bool
 ```
 
-Notes:
+#### Endpoints
 
-- upload() accepts Laravel/Symfony UploadedFile, string path, or raw contents
-- Endpoints used: GET /storage/url|size|exists, POST /storage/upload, DELETE /storage/delete
+- `POST /storage/upload`
+- `GET /storage/url`
+- `GET /storage/size`
+- `GET /storage/exists`
+- `DELETE /storage/delete`
 
-## Websocket module
+---
 
-Dispatch real-time events to channels (e.g. from a listener or job):
+### WebSocket module
+
+Dispatch real-time events to channels from a server-side listener or job.
+
+#### Methods
+
+`Efihub::socket()` returns `Efihub\Modules\WebsocketClient` with:
+
+- `dispatch(string $channel, string $event, array $data): bool` – broadcasts an event; returns `true` on success.
+
+#### Usage
 
 ```php
 use Efihub\Facades\Efihub;
@@ -195,34 +265,39 @@ if (!$ok) {
 }
 ```
 
-Endpoint used: POST `/api/websocket/dispatch` with JSON `{ channel, event, data }`.
+#### Endpoint
 
-## SSO module
+- `POST /websocket/dispatch` — payload: `{ channel, event, data }`
 
-Centralized login flow: generate authorization URL, redirect user, then exchange `redirect_token` for user data.
+---
 
-### Methods
+### SSO module
+
+Centralized login flow: generate an authorization URL, redirect the user, then exchange the `redirect_token` for user data.
+
+#### Methods
 
 `Efihub::sso()` returns `Efihub\Modules\SSOClient` with:
 
-- `login(): string|false` – returns authorization URL or `false`.
-- `userData(string $redirectToken): array|false` – returns user info array or `false`.
+- `login(): string|false` – returns the authorization URL or `false` on failure.
+- `userData(string $redirectToken): array|false` – exchanges the token for user info; returns an array or `false` on failure.
 
-### Generate authorization URL
+#### Usage
+
+**Step 1 — Redirect the user to EFIHUB login:**
 
 ```php
 use Efihub\Facades\Efihub;
 
 $authUrl = Efihub::sso()->login();
 if ($authUrl === false) {
-    // log error
+    // log error and abort
 }
-// return redirect()->away($authUrl);
+
+return redirect()->away($authUrl);
 ```
 
-### Handle callback
-
-Assuming your callback route receives `redirect_token`:
+**Step 2 — Handle the callback and fetch user data:**
 
 ```php
 $token = request('redirect_token');
@@ -235,37 +310,84 @@ if ($user === false) {
 }
 ```
 
-### Endpoints
+#### Endpoints
 
 - `POST /sso/authorize`
 - `GET /sso/user`
 
-Note: Security enhancements like `state` / `nonce` can be layered externally; ensure you bind the session before redirecting.
+> Security enhancements like `state` / `nonce` can be layered externally; ensure you bind the session before redirecting.
 
-## WhatsApp module
+---
 
-Send WhatsApp messages (single recipient or group) with optional reference metadata and file attachments.
+### WhatsApp module
 
-### Methods
+Manage WhatsApp agents and send messages (text or with attachments) to individual recipients or groups.
 
-`Efihub::whatsapp()` returns an instance of `Efihub\Modules\WhatsappClient` exposing:
+#### Methods
 
-- `sendMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool`
-- `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool`
-- `sendAttachment(string $sender, string $to, string $message, mixed $attachment): bool`
-- `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment): bool`
+`Efihub::whatsapp()` returns `Efihub\Modules\WhatsappClient` with:
 
-Each returns `true` on HTTP success (2xx), otherwise `false`.
+**Agent management**
 
-### Simple text message
+| Method                                                | Returns        | Description                                                  |
+| ----------------------------------------------------- | -------------- | ------------------------------------------------------------ |
+| `agents()`                                            | `array`        | List all registered agents/sessions. Empty array on failure. |
+| `agentQR(string $agentCode)`                          | `string\|null` | QR code as `image/png;base64`, or `null` on failure.         |
+| `agentStatus(string $agentCode)`                      | `string\|null` | `'connected'` or `'disconnected'`, or `null` on failure.     |
+| `checkPhoneNumber(string $agentCode, string $number)` | `bool`         | `true` if the number is a valid WhatsApp user.               |
+
+**Messaging**
+
+| Method                                                                                             | Returns | Description                                                  |
+| -------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------ |
+| `sendMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`      | `bool`  | Send a text message to a single recipient.                   |
+| `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)` | `bool`  | Send a text message to a group.                              |
+| `sendAttachment(string $sender, string $to, string $message, mixed $attachment)`                   | `bool`  | Send a message with a file attachment to a single recipient. |
+| `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment)`              | `bool`  | Send a message with a file attachment to a group.            |
+
+All methods return `true` on HTTP success (2xx), `false` otherwise.
+
+#### Agent management
 
 ```php
 use Efihub\Facades\Efihub;
 
+// List all registered agents
+$agents = Efihub::whatsapp()->agents();
+// returns: [ ['code' => 'AGENT1', ...], ... ]
+
+// Get QR code image (base64 PNG) to display for scanning
+$qr = Efihub::whatsapp()->agentQR('AGENT1');
+// returns: 'data:image/png;base64,...' or null
+
+// Check connection status
+$status = Efihub::whatsapp()->agentStatus('AGENT1');
+// returns: 'connected' | 'disconnected' | null
+
+// Validate a phone number before sending
+$valid = Efihub::whatsapp()->checkPhoneNumber('AGENT1', '628109998877');
+if (!$valid) {
+    // number is not on WhatsApp
+}
+```
+
+#### Sending messages
+
+```php
+use Efihub\Facades\Efihub;
+
+// Send to a single recipient
 $ok = Efihub::whatsapp()->sendMessage(
     sender: '+6281234567890',
     to: '+628109998877',
     message: 'Halo! Tes WhatsApp.'
+);
+
+// Send to a group
+$ok = Efihub::whatsapp()->sendGroupMessage(
+    sender: '+6281234567890',
+    to: 'group-abc123', // group identifier
+    message: 'Hello World!'
 );
 
 if (!$ok) {
@@ -273,45 +395,30 @@ if (!$ok) {
 }
 ```
 
-### Group message
+#### Attachments
 
 ```php
-$ok = Efihub::whatsapp()->sendGroupMessage(
-    sender: '+6281234567890',
-    to: 'group-abc123', // group identifier
-    message: 'Halo semua!'
-);
-```
-
-### Attachment (single file)
-
-Supports the same flexible file specs as `postMultipart()`:
-
-```php
-// Path string
+// Single file by path
 $ok = Efihub::whatsapp()->sendAttachment(
     sender: '+6281234567890',
     to: '+628109998877',
-    message: 'Berikut invoice',
+    message: 'Berikut invoice kamu',
     attachment: storage_path('app/invoices/jan.pdf'),
 );
 
-// Raw contents with custom filename & headers
+// Raw contents with custom filename & MIME type
 $ok = Efihub::whatsapp()->sendAttachment(
     sender: '+6281234567890',
     to: '+628109998877',
-    message: 'Data CSV',
+    message: 'Report CSV',
     attachment: [
         'contents' => file_get_contents(storage_path('app/tmp/report.csv')),
         'filename' => 'report.csv',
-        'headers' => ['Content-Type' => 'text/csv'],
+        'headers'  => ['Content-Type' => 'text/csv'],
     ],
 );
-```
 
-### Multiple attachments to a group
-
-```php
+// Multiple files to a group
 $ok = Efihub::whatsapp()->sendGroupAttachment(
     sender: '+6281234567890',
     to: 'group-abc123',
@@ -323,20 +430,32 @@ $ok = Efihub::whatsapp()->sendGroupAttachment(
 );
 ```
 
-### File spec formats
+**Supported file spec formats:**
 
-- `/path/to/file.ext`
-- `[ 'path' => '/path/to/file.ext', 'filename' => 'custom.ext', 'headers' => ['Content-Type' => 'application/pdf'] ]`
-- `[ 'contents' => $binaryOrString, 'filename' => 'name.ext', 'headers' => [...] ]`
-- `[ '/path/a.jpg', '/path/b.jpg' ]` (multiple files)
+| Format                          | Example                                                                           |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| Path string                     | `'/path/to/file.pdf'`                                                             |
+| Path array with custom name     | `['path' => '/path/to/file.pdf', 'filename' => 'custom.pdf', 'headers' => [...]]` |
+| Raw contents                    | `['contents' => $binary, 'filename' => 'name.ext', 'headers' => [...]]`           |
+| Multiple files (array of specs) | `['/path/a.jpg', '/path/b.jpg']`                                                  |
 
-### Reference metadata
+#### Reference metadata
 
-Optional `ref_id` / `ref_url` let you correlate outbound messages with internal entities (orders, tickets, etc.). Include them when auditing or reconciling.
+`sendMessage` and `sendGroupMessage` accept optional `$ref_id` and `$ref_url` parameters to correlate outbound messages with internal entities (orders, tickets, etc.):
 
-### Error inspection
+```php
+Efihub::whatsapp()->sendMessage(
+    sender: '+6281234567890',
+    to: '+628109998877',
+    message: 'Your order has been shipped.',
+    ref_id: 'order-9988',
+    ref_url: 'https://yourapp.com/orders/9988',
+);
+```
 
-The helpers only return boolean. For full details grab the raw response:
+#### Error inspection
+
+The helpers only return `bool`. For full error details, use the base HTTP client directly:
 
 ```php
 $client = app(\Efihub\EfihubClient::class);
@@ -344,19 +463,27 @@ $response = $client->post('/whatsapp/send_message', [ /* payload */ ]);
 if ($response->failed()) {
     logger()->error('WA send failed', [
         'status' => $response->status(),
-        'body' => $response->json(),
+        'body'   => $response->json(),
     ]);
 }
 ```
 
-### Endpoints used
+#### Endpoints
 
-- `POST /whatsapp/send_message`
-- `POST /whatsapp/group/send_message`
-- `POST /whatsapp/send_message_with_attachment`
-- `POST /whatsapp/group/send_message_with_attachment`
+| Method                  | Endpoint                                                  |
+| ----------------------- | --------------------------------------------------------- |
+| `agents()`              | `GET /whatsapp/sessions`                                  |
+| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`               |
+| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`               |
+| `checkPhoneNumber()`    | `GET /whatsapp/sessions/user/exists/{agentCode}/{number}` |
+| `sendMessage()`         | `POST /whatsapp/send_message`                             |
+| `sendGroupMessage()`    | `POST /whatsapp/group/send_message`                       |
+| `sendAttachment()`      | `POST /whatsapp/send_message_with_attachment`             |
+| `sendGroupAttachment()` | `POST /whatsapp/group/send_message_with_attachment`       |
 
 > Adjust paths if your EFIHUB deployment customizes routing.
+
+---
 
 ## License & Author
 
