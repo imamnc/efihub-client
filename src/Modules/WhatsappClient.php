@@ -150,17 +150,21 @@ class WhatsappClient
      * @param string $to Recipient phone number or group ID
      * @param string $message Text message content
      * @param mixed $attachment File spec accepted by EfihubClient::postMultipart (string path, assoc with 'path'/'contents', or array list)
+     * @param string|null $ref_id Optional reference ID
+     * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
     /**
      * @param mixed $attachment
      */
-    public function sendAttachment(string $sender, string $to, string $message, $attachment): bool
+    public function sendAttachment(string $sender, string $to, string $message, $attachment, $ref_id = null, $ref_url = null): bool
     {
         $fields = [
             'sender' => $sender,
             'to' => $to,
             'message' => $message,
+            'ref_id' => $ref_id,
+            'ref_url' => $ref_url,
         ];
 
         // Send request
@@ -182,17 +186,21 @@ class WhatsappClient
      * @param string $to Recipient phone number or group ID
      * @param string $message Text message content
      * @param mixed $attachment File spec accepted by EfihubClient::postMultipart (string path, assoc with 'path'/'contents', or array list)
+     * @param string|null $ref_id Optional reference ID
+     * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
     /**
      * @param mixed $attachment
      */
-    public function sendGroupAttachment(string $sender, string $to, string $message, $attachment): bool
+    public function sendGroupAttachment(string $sender, string $to, string $message, $attachment, $ref_id = null, $ref_url = null): bool
     {
         $fields = [
             'sender' => $sender,
             'to' => $to,
             'message' => $message,
+            'ref_id' => $ref_id,
+            'ref_url' => $ref_url,
         ];
 
         // Send request

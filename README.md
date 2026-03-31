@@ -338,12 +338,12 @@ Manage WhatsApp agents and send messages (text or with attachments) to individua
 
 **Messaging**
 
-| Method                                                                                             | Returns | Description                                                  |
-| -------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------ |
-| `sendMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`      | `bool`  | Send a text message to a single recipient.                   |
-| `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)` | `bool`  | Send a text message to a group.                              |
-| `sendAttachment(string $sender, string $to, string $message, mixed $attachment)`                   | `bool`  | Send a message with a file attachment to a single recipient. |
-| `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment)`              | `bool`  | Send a message with a file attachment to a group.            |
+| Method                                                                                                                   | Returns | Description                                                  |
+| ------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| `sendMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                            | `bool`  | Send a text message to a single recipient.                   |
+| `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                       | `bool`  | Send a text message to a group.                              |
+| `sendAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)`      | `bool`  | Send a message with a file attachment to a single recipient. |
+| `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)` | `bool`  | Send a message with a file attachment to a group.            |
 
 All methods return `true` on HTTP success (2xx), `false` otherwise.
 
@@ -441,15 +441,45 @@ $ok = Efihub::whatsapp()->sendGroupAttachment(
 
 #### Reference metadata
 
-`sendMessage` and `sendGroupMessage` accept optional `$ref_id` and `$ref_url` parameters to correlate outbound messages with internal entities (orders, tickets, etc.):
+All four send methods accept optional `$ref_id` and `$ref_url` parameters to correlate outbound messages with internal entities (orders, tickets, etc.):
 
 ```php
+// Text message
 Efihub::whatsapp()->sendMessage(
     sender: '+6281234567890',
     to: '+628109998877',
     message: 'Your order has been shipped.',
     ref_id: 'order-9988',
     ref_url: 'https://yourapp.com/orders/9988',
+);
+
+// Text message to a group
+Efihub::whatsapp()->sendGroupMessage(
+    sender: '+6281234567890',
+    to: 'group-abc123',
+    message: 'Bulk shipment processed.',
+    ref_id: 'batch-42',
+    ref_url: 'https://yourapp.com/batches/42',
+);
+
+// Attachment to a single recipient
+Efihub::whatsapp()->sendAttachment(
+    sender: '+6281234567890',
+    to: '+628109998877',
+    message: 'Berikut invoice kamu.',
+    attachment: storage_path('app/invoices/jan.pdf'),
+    ref_id: 'invoice-101',
+    ref_url: 'https://yourapp.com/invoices/101',
+);
+
+// Attachment to a group
+Efihub::whatsapp()->sendGroupAttachment(
+    sender: '+6281234567890',
+    to: 'group-abc123',
+    message: 'Laporan bulanan.',
+    attachment: storage_path('app/reports/jan.pdf'),
+    ref_id: 'report-jan',
+    ref_url: 'https://yourapp.com/reports/jan',
 );
 ```
 
