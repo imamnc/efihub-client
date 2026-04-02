@@ -379,14 +379,14 @@ use Efihub\Facades\Efihub;
 
 // Send to a single recipient
 $ok = Efihub::whatsapp()->sendMessage(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: '+628109998877',
     message: 'Halo! Tes WhatsApp.'
 );
 
 // Send to a group
 $ok = Efihub::whatsapp()->sendGroupMessage(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: 'group-abc123', // group identifier
     message: 'Hello World!'
 );
@@ -401,7 +401,7 @@ if (!$ok) {
 ```php
 // Single file by path
 $ok = Efihub::whatsapp()->sendAttachment(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: '+628109998877',
     message: 'Berikut invoice kamu',
     attachment: storage_path('app/invoices/jan.pdf'),
@@ -409,7 +409,7 @@ $ok = Efihub::whatsapp()->sendAttachment(
 
 // Raw contents with custom filename & MIME type
 $ok = Efihub::whatsapp()->sendAttachment(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: '+628109998877',
     message: 'Report CSV',
     attachment: [
@@ -421,7 +421,7 @@ $ok = Efihub::whatsapp()->sendAttachment(
 
 // Multiple files to a group
 $ok = Efihub::whatsapp()->sendGroupAttachment(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: 'group-abc123',
     message: 'Semua dokumen',
     attachment: [
@@ -447,7 +447,7 @@ All four send methods accept optional `$ref_id` and `$ref_url` parameters to cor
 ```php
 // Text message
 Efihub::whatsapp()->sendMessage(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: '+628109998877',
     message: 'Your order has been shipped.',
     ref_id: 'order-9988',
@@ -456,7 +456,7 @@ Efihub::whatsapp()->sendMessage(
 
 // Text message to a group
 Efihub::whatsapp()->sendGroupMessage(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: 'group-abc123',
     message: 'Bulk shipment processed.',
     ref_id: 'batch-42',
@@ -465,7 +465,7 @@ Efihub::whatsapp()->sendGroupMessage(
 
 // Attachment to a single recipient
 Efihub::whatsapp()->sendAttachment(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: '+628109998877',
     message: 'Berikut invoice kamu.',
     attachment: storage_path('app/invoices/jan.pdf'),
@@ -475,7 +475,7 @@ Efihub::whatsapp()->sendAttachment(
 
 // Attachment to a group
 Efihub::whatsapp()->sendGroupAttachment(
-    sender: '+6281234567890',
+    sender: 'AGENT1',
     to: 'group-abc123',
     message: 'Laporan bulanan.',
     attachment: storage_path('app/reports/jan.pdf'),
