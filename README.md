@@ -344,8 +344,9 @@ Manage WhatsApp agents and send messages (text or with attachments) to individua
 | `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                       | `bool`  | Send a text message to a group.                              |
 | `sendAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)`      | `bool`  | Send a message with a file attachment to a single recipient. |
 | `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)` | `bool`  | Send a message with a file attachment to a group.            |
+| `getMessages(string $agentCode, string $phone, int $limit = 10)`                                                         | `array` | Retrieve recent messages for an agent and phone number.      |
 
-All methods return `true` on HTTP success (2xx), `false` otherwise.
+All send methods return `true` on HTTP success (2xx), `false` otherwise. The `getMessages()` method returns an array of messages or empty array on failure.
 
 #### Agent management
 
@@ -483,6 +484,27 @@ Efihub::whatsapp()->sendGroupAttachment(
 );
 ```
 
+#### Retrieving messages
+
+```php
+use Efihub\Facades\Efihub;
+
+// Retrieve recent messages for an agent and phone number
+$messages = Efihub::whatsapp()->getMessages(
+    agentCode: 'AGENT1',
+    phone: '+628109998877',
+    limit: 10  // optional, defaults to 10
+);
+
+if (!empty($messages)) {
+    foreach ($messages as $msg) {
+        echo "From: {$msg['from']}, Message: {$msg['message']}";
+    }
+} else {
+    // No messages or request failed
+}
+```
+
 #### Error inspection
 
 The helpers only return `bool`. For full error details, use the base HTTP client directly:
@@ -508,16 +530,17 @@ All sending methods (`sendMessage`, `sendGroupMessage`, `sendAttachment`, `sendG
 
 #### Endpoints
 
-| Method                  | Endpoint                                         |
-| ----------------------- | ------------------------------------------------ |
-| `agents()`              | `GET /whatsapp/sessions`                         |
-| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`      |
-| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`      |
-| `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}` |
-| `sendMessage()`         | `POST /whatsapp/message`                         |
-| `sendGroupMessage()`    | `POST /whatsapp/message/group`                   |
-| `sendAttachment()`      | `POST /whatsapp/message/attachment`              |
-| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`        |
+| Method                  | Endpoint                                             |
+| ----------------------- | ---------------------------------------------------- |
+| `agents()`              | `GET /whatsapp/sessions`                             |
+| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`          |
+| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`          |
+| `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}`     |
+| `sendMessage()`         | `POST /whatsapp/message`                             |
+| `sendGroupMessage()`    | `POST /whatsapp/message/group`                       |
+| `sendAttachment()`      | `POST /whatsapp/message/attachment`                  |
+| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`            |
+| `getMessages()`         | `GET /whatsapp/messages/{agentCode}/{phone}/{limit}` |
 
 > Adjust paths if your EFIHUB deployment customizes routing.
 
