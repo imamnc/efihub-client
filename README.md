@@ -508,16 +508,16 @@ All sending methods (`sendMessage`, `sendGroupMessage`, `sendAttachment`, `sendG
 
 #### Endpoints
 
-| Method                  | Endpoint                                      |
-| ----------------------- | --------------------------------------------- |
-| `agents()`              | `GET /whatsapp/sessions`                      |
-| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`   |
-| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`   |
+| Method                  | Endpoint                                         |
+| ----------------------- | ------------------------------------------------ |
+| `agents()`              | `GET /whatsapp/sessions`                         |
+| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`      |
+| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`      |
 | `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}` |
-| `sendMessage()`         | `POST /whatsapp/message`                      |
-| `sendGroupMessage()`    | `POST /whatsapp/message/group`                |
-| `sendAttachment()`      | `POST /whatsapp/message/attachment`           |
-| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`     |
+| `sendMessage()`         | `POST /whatsapp/message`                         |
+| `sendGroupMessage()`    | `POST /whatsapp/message/group`                   |
+| `sendAttachment()`      | `POST /whatsapp/message/attachment`              |
+| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`        |
 
 > Adjust paths if your EFIHUB deployment customizes routing.
 
