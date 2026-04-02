@@ -19,6 +19,13 @@ class WhatsappClient
         $this->client = $client;
     }
 
+    public function normalizePhoneNumber(string $phone): string
+    {
+        // Expected 62xxxxxxxxxxxx
+        $normalized = preg_replace('/^\+?0?/', '62', $phone);
+        return $normalized;
+    }
+
     /**
      * Get all Whatsapp Agents
      *
@@ -75,7 +82,8 @@ class WhatsappClient
      */
     public function checkPhoneNumber(string $agentCode, string $number): bool
     {
-        $res = $this->client->get("/whatsapp/sessions/user/exists/$agentCode/$number");
+        $normalizedNumber = $this->normalizePhoneNumber($number);
+        $res = $this->client->get("/whatsapp/user/exists/$agentCode/$normalizedNumber");
         if (!$res->successful()) {
             return false;
         }
@@ -97,14 +105,14 @@ class WhatsappClient
     {
         $payload = [
             'sender' => $sender,
-            'to' => $to,
+            'to' => $this->normalizePhoneNumber($to),
             'message' => $message,
             'ref_id' => $ref_id,
             'ref_url' => $ref_url,
         ];
 
         // Send request
-        $res = $this->client->post('/whatsapp/send_message', $payload);
+        $res = $this->client->post('/whatsapp/message', $payload);
 
         if (!$res->successful()) {
             return false;
@@ -127,14 +135,14 @@ class WhatsappClient
     {
         $payload = [
             'sender' => $sender,
-            'to' => $to,
+            'to' => $this->normalizePhoneNumber($to),
             'message' => $message,
             'ref_id' => $ref_id,
             'ref_url' => $ref_url,
         ];
 
         // Send request
-        $res = $this->client->post('/whatsapp/group/send_message', $payload);
+        $res = $this->client->post('/whatsapp/message/group', $payload);
 
         if (!$res->successful()) {
             return false;
@@ -161,14 +169,14 @@ class WhatsappClient
     {
         $fields = [
             'sender' => $sender,
-            'to' => $to,
+            'to' => $this->normalizePhoneNumber($to),
             'message' => $message,
             'ref_id' => $ref_id,
             'ref_url' => $ref_url,
         ];
 
         // Send request
-        $res = $this->client->postMultipart('/whatsapp/send_message_with_attachment', $fields, [
+        $res = $this->client->postMultipart('/whatsapp/message/attachment', $fields, [
             'attachment' => $attachment,
         ]);
 
@@ -197,14 +205,14 @@ class WhatsappClient
     {
         $fields = [
             'sender' => $sender,
-            'to' => $to,
+            'to' => $this->normalizePhoneNumber($to),
             'message' => $message,
             'ref_id' => $ref_id,
             'ref_url' => $ref_url,
         ];
 
         // Send request
-        $res = $this->client->postMultipart('/whatsapp/group/send_message_with_attachment', $fields, [
+        $res = $this->client->postMultipart('/whatsapp/message/group/attachment', $fields, [
             'attachment' => $attachment,
         ]);
 
@@ -213,5 +221,27 @@ class WhatsappClient
         }
 
         return true;
+    }
+
+    /**
+     * Get recent messages for a Whatsapp agent and phone number.
+     *
+     * @param string $agentCode Agent code to fetch messages for
+     * @param string $phone Phone number to fetch messages for
+     * @param int $limit Number of recent messages to retrieve (default 10)
+     * @return array List of messages, empty array on failure
+     */
+    public function getMessages(string $agentCode, string $phone, $limit = 10): array
+    {
+        // Remove leading '+' if present, as API expects raw numbers
+        $normalizedPhone = $this->normalizePhoneNumber($phone);
+
+        // Send request
+        $res = $this->client->get("/whatsapp/messages/$agentCode/$normalizedPhone/$limit");
+        if (!$res->successful()) {
+            return [];
+        }
+
+        return $res->json('data') ?? [];
     }
 }

@@ -498,18 +498,26 @@ if ($response->failed()) {
 }
 ```
 
+#### Phone number normalization
+
+All sending methods (`sendMessage`, `sendGroupMessage`, `sendAttachment`, `sendGroupAttachment`) automatically normalize phone numbers to the international format (`62xxxxxxxxxx` for Indonesia). You may pass numbers in any common format:
+
+- `+628109998877` → `628109998877`
+- `08109998877` → `628109998877`
+- `628109998877` → `628109998877` (unchanged)
+
 #### Endpoints
 
-| Method                  | Endpoint                                                  |
-| ----------------------- | --------------------------------------------------------- |
-| `agents()`              | `GET /whatsapp/sessions`                                  |
-| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`               |
-| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`               |
-| `checkPhoneNumber()`    | `GET /whatsapp/sessions/user/exists/{agentCode}/{number}` |
-| `sendMessage()`         | `POST /whatsapp/send_message`                             |
-| `sendGroupMessage()`    | `POST /whatsapp/group/send_message`                       |
-| `sendAttachment()`      | `POST /whatsapp/send_message_with_attachment`             |
-| `sendGroupAttachment()` | `POST /whatsapp/group/send_message_with_attachment`       |
+| Method                  | Endpoint                                      |
+| ----------------------- | --------------------------------------------- |
+| `agents()`              | `GET /whatsapp/sessions`                      |
+| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`   |
+| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`   |
+| `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}` |
+| `sendMessage()`         | `POST /whatsapp/message`                      |
+| `sendGroupMessage()`    | `POST /whatsapp/message/group`                |
+| `sendAttachment()`      | `POST /whatsapp/message/attachment`           |
+| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`     |
 
 > Adjust paths if your EFIHUB deployment customizes routing.
 
