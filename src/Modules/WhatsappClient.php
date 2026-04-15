@@ -21,9 +21,15 @@ class WhatsappClient
 
     public function normalizePhoneNumber(string $phone): string
     {
-        // Expected 62xxxxxxxxxxxx
-        $normalized = preg_replace('/^\+?0?/', '62', $phone);
-        return $normalized;
+        // Only if the phone number starts with '0' or '+', replace it with '62'
+        if (preg_match('/^(0|\+)/', $phone)) {
+            // Expected 62xxxxxxxxxxxx
+            $normalized = preg_replace('/^(0|\+)/', '62', $phone);
+            return $normalized;
+        } else {
+            // If it doesn't start with '0' or '+', assume it's already in correct format
+            return $phone;
+        }
     }
 
     /**
