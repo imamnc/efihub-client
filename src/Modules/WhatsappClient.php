@@ -7,7 +7,7 @@ use Efihub\EfihubClient;
 /**
  * Storage Service client for EFIHUB.
  *
- * Base path: /storage
+ * Base path: /whatsapp
  */
 class WhatsappClient
 {
@@ -107,7 +107,7 @@ class WhatsappClient
      * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
-    public function sendMessage(string $sender, string $to, string $message, $ref_id = null, $ref_url = null): bool
+    public function sendMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool
     {
         $payload = [
             'sender' => $sender,
@@ -137,7 +137,7 @@ class WhatsappClient
      * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
-    public function sendGroupMessage(string $sender, string $to, string $message, $ref_id = null, $ref_url = null): bool
+    public function sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id = null, ?string $ref_url = null): bool
     {
         $payload = [
             'sender' => $sender,
@@ -168,10 +168,7 @@ class WhatsappClient
      * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
-    /**
-     * @param mixed $attachment
-     */
-    public function sendAttachment(string $sender, string $to, string $message, $attachment, $ref_id = null, $ref_url = null): bool
+    public function sendAttachment(string $sender, string $to, string $message, $attachment, ?string $ref_id = null, ?string $ref_url = null): bool
     {
         $fields = [
             'sender' => $sender,
@@ -204,10 +201,7 @@ class WhatsappClient
      * @param string|null $ref_url Optional reference URL
      * @return bool True on success, false on failure
      */
-    /**
-     * @param mixed $attachment
-     */
-    public function sendGroupAttachment(string $sender, string $to, string $message, $attachment, $ref_id = null, $ref_url = null): bool
+    public function sendGroupAttachment(string $sender, string $to, string $message, $attachment, ?string $ref_id = null, ?string $ref_url = null): bool
     {
         $fields = [
             'sender' => $sender,
@@ -237,7 +231,7 @@ class WhatsappClient
      * @param int $limit Number of recent messages to retrieve (default 10)
      * @return array List of messages, empty array on failure
      */
-    public function getMessages(string $agentCode, string $phone, $limit = 10): array
+    public function getMessages(string $agentCode, string $phone, int $limit = 10): array
     {
         // Remove leading '+' if present, as API expects raw numbers
         $normalizedPhone = $this->normalizePhoneNumber($phone);
@@ -249,5 +243,26 @@ class WhatsappClient
         }
 
         return $res->json('data') ?? [];
+    }
+
+    /**
+     * Download media for a specific Whatsapp message.
+     * 
+     * @param string $agentCode
+     * @param string $phone
+     * @param string $messageId
+     * @return object|null
+     */
+    public function downloadMedia(string $agentCode, string $phone, string $messageId): ?object
+    {
+        // Normalize phone number
+        $normalizedPhone = $this->normalizePhoneNumber($phone);
+        // Send request
+        $res = $this->client->get("/whatsapp/message/download/{$agentCode}/{$normalizedPhone}/{$messageId}");
+        if (!$res->successful()) {
+            return null;
+        }
+
+        return $res->object()->data ?? null;
     }
 }
