@@ -329,22 +329,26 @@ Manage WhatsApp agents and send messages (text or with attachments) to individua
 
 **Agent management**
 
-| Method                                                | Returns        | Description                                                  |
-| ----------------------------------------------------- | -------------- | ------------------------------------------------------------ |
-| `agents()`                                            | `array`        | List all registered agents/sessions. Empty array on failure. |
-| `agentQR(string $agentCode)`                          | `string\|null` | QR code as `image/png;base64`, or `null` on failure.         |
-| `agentStatus(string $agentCode)`                      | `string\|null` | `'connected'` or `'disconnected'`, or `null` on failure.     |
-| `checkPhoneNumber(string $agentCode, string $number)` | `bool`         | `true` if the number is a valid WhatsApp user.               |
+| Method                                                | Returns        | Description                                                    |
+| ----------------------------------------------------- | -------------- | -------------------------------------------------------------- |
+| `agents()`                                            | `array`        | List all registered agents/sessions. Empty array on failure.   |
+| `agentQR(string $agentCode)`                          | `string\|null` | QR code as `image/png;base64`, or `null` on failure.           |
+| `agentStatus(string $agentCode)`                      | `string\|null` | `'connected'` or `'disconnected'`, or `null` on failure.       |
+| `agentStart(string $agentCode)`                       | `bool`         | Start a WhatsApp agent session. Returns `true` on success.     |
+| `agentRestart(string $agentCode)`                     | `bool`         | Restart a WhatsApp agent session. Returns `true` on success.   |
+| `agentTerminate(string $agentCode)`                   | `bool`         | Terminate a WhatsApp agent session. Returns `true` on success. |
+| `checkPhoneNumber(string $agentCode, string $number)` | `bool`         | `true` if the number is a valid WhatsApp user.                 |
 
 **Messaging**
 
-| Method                                                                                                                   | Returns | Description                                                  |
-| ------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| `sendMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                            | `bool`  | Send a text message to a single recipient.                   |
-| `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                       | `bool`  | Send a text message to a group.                              |
-| `sendAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)`      | `bool`  | Send a message with a file attachment to a single recipient. |
-| `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)` | `bool`  | Send a message with a file attachment to a group.            |
-| `getMessages(string $agentCode, string $phone, int $limit = 10)`                                                         | `array` | Retrieve recent messages for an agent and phone number.      |
+| Method                                                                                                                   | Returns        | Description                                                  |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------- | ------------------------------------------------------------ |
+| `sendMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                            | `bool`         | Send a text message to a single recipient.                   |
+| `sendGroupMessage(string $sender, string $to, string $message, ?string $ref_id, ?string $ref_url)`                       | `bool`         | Send a text message to a group.                              |
+| `sendAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)`      | `bool`         | Send a message with a file attachment to a single recipient. |
+| `sendGroupAttachment(string $sender, string $to, string $message, mixed $attachment, ?string $ref_id, ?string $ref_url)` | `bool`         | Send a message with a file attachment to a group.            |
+| `getMessages(string $agentCode, string $phone, int $limit = 10)`                                                         | `array`        | Retrieve recent messages for an agent and phone number.      |
+| `downloadMedia(string $agentCode, string $phone, string $messageId)`                                                     | `object\|null` | Download media attachment from a specific message.           |
 
 All send methods return `true` on HTTP success (2xx), `false` otherwise. The `getMessages()` method returns an array of messages or empty array on failure.
 
@@ -364,6 +368,24 @@ $qr = Efihub::whatsapp()->agentQR('AGENT1');
 // Check connection status
 $status = Efihub::whatsapp()->agentStatus('AGENT1');
 // returns: 'connected' | 'disconnected' | null
+
+// Start a WhatsApp agent session
+$started = Efihub::whatsapp()->agentStart('AGENT1');
+if ($started) {
+    // session started successfully
+}
+
+// Restart a WhatsApp agent session
+$restarted = Efihub::whatsapp()->agentRestart('AGENT1');
+if ($restarted) {
+    // session restarted successfully
+}
+
+// Terminate a WhatsApp agent session
+$terminated = Efihub::whatsapp()->agentTerminate('AGENT1');
+if ($terminated) {
+    // session terminated successfully
+}
 
 // Validate a phone number before sending
 $valid = Efihub::whatsapp()->checkPhoneNumber('AGENT1', '628109998877');
@@ -503,6 +525,20 @@ if (!empty($messages)) {
 } else {
     // No messages or request failed
 }
+
+// Download media attachment from a specific message
+$media = Efihub::whatsapp()->downloadMedia(
+    agentCode: 'AGENT1',
+    phone: '+628109998877',
+    messageId: 'msg_abc123'
+);
+
+if ($media) {
+    // $media contains media URL and metadata
+    echo "Media URL: {$media->url}";
+} else {
+    // Media download failed
+}
 ```
 
 #### Error inspection
@@ -530,17 +566,21 @@ All sending methods (`sendMessage`, `sendGroupMessage`, `sendAttachment`, `sendG
 
 #### Endpoints
 
-| Method                  | Endpoint                                             |
-| ----------------------- | ---------------------------------------------------- |
-| `agents()`              | `GET /whatsapp/sessions`                             |
-| `agentQR()`             | `GET /whatsapp/sessions/qrcode/{agentCode}`          |
-| `agentStatus()`         | `GET /whatsapp/sessions/status/{agentCode}`          |
-| `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}`     |
-| `sendMessage()`         | `POST /whatsapp/message`                             |
-| `sendGroupMessage()`    | `POST /whatsapp/message/group`                       |
-| `sendAttachment()`      | `POST /whatsapp/message/attachment`                  |
-| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`            |
-| `getMessages()`         | `GET /whatsapp/messages/{agentCode}/{phone}/{limit}` |
+| Method                  | Endpoint                                                         |
+| ----------------------- | ---------------------------------------------------------------- |
+| `agents()`              | `GET /whatsapp/sessions`                                         |
+| `agentQR()`             | `GET /whatsapp/session/qrcode/{agentCode}`                       |
+| `agentStatus()`         | `GET /whatsapp/session/status/{agentCode}`                       |
+| `agentStart()`          | `POST /whatsapp/session/start/{agentCode}`                       |
+| `agentRestart()`        | `POST /whatsapp/session/restart/{agentCode}`                     |
+| `agentTerminate()`      | `POST /whatsapp/session/terminate/{agentCode}`                   |
+| `checkPhoneNumber()`    | `GET /whatsapp/user/exists/{agentCode}/{number}`                 |
+| `sendMessage()`         | `POST /whatsapp/message`                                         |
+| `sendGroupMessage()`    | `POST /whatsapp/message/group`                                   |
+| `sendAttachment()`      | `POST /whatsapp/message/attachment`                              |
+| `sendGroupAttachment()` | `POST /whatsapp/message/group/attachment`                        |
+| `getMessages()`         | `GET /whatsapp/messages/{agentCode}/{phone}/{limit}`             |
+| `downloadMedia()`       | `GET /whatsapp/message/download/{agentCode}/{phone}/{messageId}` |
 
 > Adjust paths if your EFIHUB deployment customizes routing.
 

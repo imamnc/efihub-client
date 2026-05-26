@@ -112,6 +112,22 @@ class WhatsappClient
     }
 
     /**
+     * Terminate a Whatsapp agent session.
+     *
+     * @param string $agentCode Agent code to terminate session
+     * @return bool True if session terminated successfully, false on failure
+     */
+    public function agentTerminate(string $agentCode): bool
+    {
+        $res = $this->client->post("/whatsapp/session/terminate/$agentCode");
+        if (!$res->successful()) {
+            return false;
+        }
+
+        return $res->json('data') == true;
+    }
+
+    /**
      * Check if a phone number is valid for a Whatsapp agent.
      *
      * @param string $agentCode Agent code to check against
