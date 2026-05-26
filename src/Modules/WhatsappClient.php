@@ -5,7 +5,7 @@ namespace Efihub\Modules;
 use Efihub\EfihubClient;
 
 /**
- * Storage Service client for EFIHUB.
+ * Whatsapp Service client for EFIHUB.
  *
  * Base path: /whatsapp
  */
@@ -55,7 +55,7 @@ class WhatsappClient
      */
     public function agentQR(string $agentCode): ?string
     {
-        $res = $this->client->get("/whatsapp/sessions/qrcode/$agentCode");
+        $res = $this->client->get("/whatsapp/session/qrcode/$agentCode");
         if (!$res->successful()) {
             return null;
         }
@@ -71,12 +71,44 @@ class WhatsappClient
      */
     public function agentStatus(string $agentCode): ?string
     {
-        $res = $this->client->get("/whatsapp/sessions/status/$agentCode");
+        $res = $this->client->get("/whatsapp/session/status/$agentCode");
         if (!$res->successful()) {
             return null;
         }
 
         return $res->json('data.status') == 'CONNECTED' ? 'connected' : 'disconnected';
+    }
+
+    /**
+     * Start a Whatsapp agent session.
+     *
+     * @param string $agentCode Agent code to start session
+     * @return bool True if session started successfully, false on failure
+     */
+    public function agentStart(string $agentCode): bool
+    {
+        $res = $this->client->post("/whatsapp/session/start/$agentCode");
+        if (!$res->successful()) {
+            return false;
+        }
+
+        return $res->json('data') == true;
+    }
+
+    /**
+     * Restart a Whatsapp agent session.
+     *
+     * @param string $agentCode Agent code to restart session
+     * @return bool True if session restarted successfully, false on failure
+     */
+    public function agentRestart(string $agentCode): bool
+    {
+        $res = $this->client->post("/whatsapp/session/restart/$agentCode");
+        if (!$res->successful()) {
+            return false;
+        }
+
+        return $res->json('data') == true;
     }
 
     /**

@@ -27,10 +27,6 @@ class StorageClient
      * @param array $fields Additional form fields if needed
      * @return string|false URL of uploaded file on success, false on failure
      */
-    /**
-     * @param mixed $file
-     * @return string|false
-     */
     public function upload($file, string $path, array $fields = [])
     {
         $fields = array_merge(['path' => $path], $fields);

@@ -37,7 +37,7 @@ class EfihubClient
             ]);
 
             if ($response->failed()) {
-                throw new \Exception('Failed to fetch EFIHUB token');
+                throw new \Exception('Failed to get EFIHUB access token');
             }
 
             $payload = $response->json();
@@ -60,7 +60,7 @@ class EfihubClient
             $tokenType = is_object($accessToken) ? get_class($accessToken) : gettype($accessToken);
             $keys = is_array($payload) ? implode(', ', array_slice(array_keys($payload), 0, 20)) : gettype($payload);
             throw new \UnexpectedValueException(
-                "EFIHUB token response missing string access_token (got {$tokenType}). Payload keys: {$keys}"
+                "EFIHUB access token response missing string access_token (got {$tokenType}). Payload keys: {$keys}"
             );
         });
     }
